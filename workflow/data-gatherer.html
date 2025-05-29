@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Hypatia - Data Gatherer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: white !important;
+      font-size: 24px;
+    }
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    .nav-link:hover {
+      color: white !important;
+    }
+    .workflow-header {
+      color: white;
+      margin-bottom: 30px;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: none;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      border-bottom: none;
+      padding: 15px 20px;
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(to right, #3a67d4, #7d48d6);
+    }
+    .progress-container {
+      margin-bottom: 30px;
+    }
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .progress-bar {
+      background: linear-gradient(to right, #FF512F, #F09819);
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .step {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      position: relative;
+      width: 10%;
+    }
+    .step.active {
+      font-weight: bold;
+      color: #F09819;
+    }
+    .data-source {
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: transform 0.3s ease;
+    }
+    .data-source:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .data-source h5 {
+      color: #4776E6;
+      margin-bottom: 10px;
+    }
+    .data-source p {
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .data-source .badge {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      margin-right: 5px;
+    }
+    .form-control {
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .table {
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .table th {
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="../index.html">Project Hypatia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link" id="userEmail"></span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="workflow-header">
+      <h1>Data Gatherer</h1>
+      <p class="lead">Step 5 of 10: Gather existing data for your experiment</p>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="step-indicator">
+        <div class="step">Question</div>
+        <div class="step">Research</div>
+        <div class="step">Hypothesis</div>
+        <div class="step">Methodology</div>
+        <div class="step active">Data</div>
+        <div class="step">Experiment</div>
+        <div class="step">Analysis</div>
+        <div class="step">Conclusion</div>
+        <div class="step">Review</div>
+        <div class="step">Publication</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Data Sources</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="dataSourceType" class="form-label">Source Type</label>
+              <select class="form-select" id="dataSourceType">
+                <option selected>Select data source type</option>
+                <option value="published">Published Research Data</option>
+                <option value="public">Public Datasets</option>
+                <option value="simulated">Simulated Data</option>
+                <option value="manual">Manual Entry</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="dataFormat" class="form-label">Data Format</label>
+              <select class="form-select" id="dataFormat">
+                <option selected>Select data format</option>
+                <option value="csv">CSV</option>
+                <option value="excel">Excel</option>
+                <option value="json">JSON</option>
+                <option value="api">API</option>
+                <option value="manual">Manual Entry</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-primary w-100 mb-3" id="searchDataBtn">Search for Data</button>
+            <div class="d-flex justify-content-between mt-4">
+              <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
+              <button type="button" class="btn btn-primary" id="nextStepBtn">Next: Experiment Runner</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Available Datasets</h5>
+          </div>
+          <div class="card-body">
+            <div id="dataSources">
+              <!-- Sample data sources -->
+              <div class="data-source">
+                <h5>Temperature Effects on Reaction Rates Dataset</h5>
+                <p>Comprehensive dataset of reaction rates measured at various temperatures for common chemical reactions.</p>
+                <div class="mb-2">
+                  <span class="badge">Chemistry</span>
+                  <span class="badge">Kinetics</span>
+                  <span class="badge">Temperature</span>
+                </div>
+                <p class="text-muted small">Source: Journal of Chemical Kinetics, 2024 | 1,250 data points</p>
+                <button class="btn btn-sm btn-outline-primary import-data">Import Dataset</button>
+              </div>
+              <div class="data-source">
+                <h5>Arrhenius Parameters for Common Reactions</h5>
+                <p>Collection of activation energies and pre-exponential factors for various chemical reactions.</p>
+                <div class="mb-2">
+                  <span class="badge">Arrhenius Equation</span>
+                  <span class="badge">Activation Energy</span>
+                </div>
+                <p class="text-muted small">Source: Chemical Reaction Database, 2023 | 500 reactions</p>
+                <button class="btn btn-sm btn-outline-primary import-data">Import Dataset</button>
+              </div>
+              <div class="data-source">
+                <h5>Temperature-Controlled Reaction Experiments</h5>
+                <p>Raw experimental data from temperature-controlled reaction chambers with precise measurements.</p>
+                <div class="mb-2">
+                  <span class="badge">Experimental</span>
+                  <span class="badge">Raw Data</span>
+                  <span class="badge">Time Series</span>
+                </div>
+                <p class="text-muted small">Source: Open Science Framework, 2022 | 30 experiments</p>
+                <button class="btn btn-sm btn-outline-primary import-data">Import Dataset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-4" id="importedDataCard" style="display: none;">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Imported Data Preview</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Temperature (°C)</th>
+                    <th>Reaction Rate (mol/L/s)</th>
+                    <th>Activation Energy (kJ/mol)</th>
+                    <th>Pre-exponential Factor</th>
+                    <th>R² Value</th>
+                  </tr>
+                </thead>
+                <tbody id="dataPreviewBody">
+                  <!-- Data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Check if user is authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!isAuthenticated || !userEmail) {
+        // Redirect to login if not authenticated
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Display user email
+      document.getElementById('userEmail').textContent = userEmail;
+      
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../login.html';
+      });
+      
+      // Handle search data button
+      document.getElementById('searchDataBtn').addEventListener('click', function() {
+        // In a real app, this would search for datasets based on selected criteria
+        alert('Searching for datasets based on your criteria...');
+      });
+      
+      // Handle import dataset buttons
+      const importButtons = document.querySelectorAll('.import-data');
+      importButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Show the imported data preview card
+          document.getElementById('importedDataCard').style.display = 'block';
+          
+          // Generate sample data for preview
+          const dataPreviewBody = document.getElementById('dataPreviewBody');
+          dataPreviewBody.innerHTML = '';
+          
+          // Sample data points
+          const sampleData = [
+            { temp: 10, rate: 0.0015, energy: 45.2, factor: '1.2 × 10⁹', r2: 0.992 },
+            { temp: 20, rate: 0.0032, energy: 45.2, factor: '1.2 × 10⁹', r2: 0.995 },
+            { temp: 30, rate: 0.0068, energy: 45.2, factor: '1.2 × 10⁹', r2: 0.989 },
+            { temp: 40, rate: 0.0142, energy: 45.2, factor: '1.2 × 10⁹', r2: 0.991 },
+            { temp: 50, rate: 0.0295, energy: 45.2, factor: '1.2 × 10⁹', r2: 0.988 }
+          ];
+          
+          sampleData.forEach(data => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${data.temp}</td>
+              <td>${data.rate}</td>
+              <td>${data.energy}</td>
+              <td>${data.factor}</td>
+              <td>${data.r2}</td>
+            `;
+            dataPreviewBody.appendChild(row);
+          });
+          
+          // Disable the clicked button
+          this.disabled = true;
+          this.textContent = 'Imported';
+          this.classList.remove('btn-outline-primary');
+          this.classList.add('btn-success');
+        });
+      });
+      
+      // Handle previous step button
+      document.getElementById('prevStepBtn').addEventListener('click', function() {
+        window.location.href = 'methodology-designer.html';
+      });
+      
+      // Handle next step button
+      document.getElementById('nextStepBtn').addEventListener('click', function() {
+        localStorage.setItem('currentStep', 'Experiment Runner');
+        window.location.href = 'experiment-runner.html';
+      });
+    });
+  </script>
+</body>
+</html>

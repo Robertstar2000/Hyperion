@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Hypatia - Research Explorer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: white !important;
+      font-size: 24px;
+    }
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    .nav-link:hover {
+      color: white !important;
+    }
+    .workflow-header {
+      color: white;
+      margin-bottom: 30px;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: none;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      border-bottom: none;
+      padding: 15px 20px;
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(to right, #3a67d4, #7d48d6);
+    }
+    .progress-container {
+      margin-bottom: 30px;
+    }
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .progress-bar {
+      background: linear-gradient(to right, #FF512F, #F09819);
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .step {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      position: relative;
+      width: 10%;
+    }
+    .step.active {
+      font-weight: bold;
+      color: #F09819;
+    }
+    .search-result {
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: transform 0.3s ease;
+    }
+    .search-result:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .search-result h5 {
+      color: #4776E6;
+      margin-bottom: 10px;
+    }
+    .search-result p {
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .search-result .source {
+      color: #999;
+      font-size: 12px;
+    }
+    .search-result .badge {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      margin-right: 5px;
+    }
+    .form-control {
+      border-radius: 8px;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="../index.html">Project Hypatia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link" id="userEmail"></span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="workflow-header">
+      <h1>Research Explorer</h1>
+      <p class="lead">Step 2 of 10: Explore existing research</p>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="step-indicator">
+        <div class="step">Question</div>
+        <div class="step active">Research</div>
+        <div class="step">Hypothesis</div>
+        <div class="step">Methodology</div>
+        <div class="step">Data</div>
+        <div class="step">Experiment</div>
+        <div class="step">Analysis</div>
+        <div class="step">Conclusion</div>
+        <div class="step">Review</div>
+        <div class="step">Publication</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Search Parameters</h5>
+          </div>
+          <div class="card-body">
+            <form id="searchForm">
+              <div class="mb-3">
+                <label for="searchQuery" class="form-label">Search Query</label>
+                <input type="text" class="form-control" id="searchQuery" placeholder="Enter keywords to search">
+              </div>
+              <div class="mb-3">
+                <label for="searchDomain" class="form-label">Domain</label>
+                <select class="form-select" id="searchDomain">
+                  <option selected>All Domains</option>
+                  <option value="biology">Biology</option>
+                  <option value="chemistry">Chemistry</option>
+                  <option value="physics">Physics</option>
+                  <option value="psychology">Psychology</option>
+                  <option value="sociology">Sociology</option>
+                  <option value="computer_science">Computer Science</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="searchYear" class="form-label">Publication Year</label>
+                <select class="form-select" id="searchYear">
+                  <option selected>All Years</option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                  <option value="2022">2022</option>
+                  <option value="2021">2021</option>
+                  <option value="2020">2020</option>
+                  <option value="older">Before 2020</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-primary w-100" id="searchBtn">Search</button>
+            </form>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Saved References</h5>
+          </div>
+          <div class="card-body">
+            <div id="savedReferences">
+              <p class="text-muted">No references saved yet.</p>
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+              <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
+              <button type="button" class="btn btn-primary" id="nextStepBtn">Next: Hypothesis Builder</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Search Results</h5>
+          </div>
+          <div class="card-body">
+            <div id="searchResults">
+              <!-- Sample search results -->
+              <div class="search-result">
+                <h5>The Effect of Temperature on Chemical Reaction Rates: A Comprehensive Review</h5>
+                <p>This review examines the relationship between temperature and reaction rates across various chemical processes, providing insights into the Arrhenius equation and its applications.</p>
+                <div class="mb-2">
+                  <span class="badge">Chemistry</span>
+                  <span class="badge">Thermodynamics</span>
+                  <span class="badge">Kinetics</span>
+                </div>
+                <p class="source">Journal of Chemical Kinetics, 2024 | Authors: J. Smith, A. Johnson</p>
+                <button class="btn btn-sm btn-outline-primary save-reference">Save Reference</button>
+              </div>
+              <div class="search-result">
+                <h5>Experimental Methods for Measuring Reaction Rates at Various Temperatures</h5>
+                <p>This paper presents novel experimental methods for accurately measuring reaction rates across a wide range of temperatures, with applications in industrial chemistry and biochemistry.</p>
+                <div class="mb-2">
+                  <span class="badge">Methodology</span>
+                  <span class="badge">Experimental Design</span>
+                  <span class="badge">Chemistry</span>
+                </div>
+                <p class="source">Analytical Chemistry, 2023 | Authors: L. Zhang, M. Patel</p>
+                <button class="btn btn-sm btn-outline-primary save-reference">Save Reference</button>
+              </div>
+              <div class="search-result">
+                <h5>Mathematical Modeling of Temperature-Dependent Reaction Kinetics</h5>
+                <p>This study develops advanced mathematical models for predicting reaction rates based on temperature variations, with validation across multiple chemical systems.</p>
+                <div class="mb-2">
+                  <span class="badge">Mathematical Modeling</span>
+                  <span class="badge">Computational Chemistry</span>
+                  <span class="badge">Kinetics</span>
+                </div>
+                <p class="source">Journal of Computational Chemistry, 2022 | Authors: R. Brown, S. Davis</p>
+                <button class="btn btn-sm btn-outline-primary save-reference">Save Reference</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Check if user is authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!isAuthenticated || !userEmail) {
+        // Redirect to login if not authenticated
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Display user email
+      document.getElementById('userEmail').textContent = userEmail;
+      
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../login.html';
+      });
+      
+      // Handle search button
+      document.getElementById('searchBtn').addEventListener('click', function() {
+        // In a real app, this would call an API to search for papers
+        alert('Search functionality would be implemented with real data in the production version.');
+      });
+      
+      // Handle save reference buttons
+      const saveButtons = document.querySelectorAll('.save-reference');
+      saveButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const result = this.closest('.search-result');
+          const title = result.querySelector('h5').textContent;
+          
+          // Add to saved references
+          const savedReferences = document.getElementById('savedReferences');
+          if (savedReferences.querySelector('.text-muted')) {
+            savedReferences.innerHTML = '';
+          }
+          
+          const referenceItem = document.createElement('div');
+          referenceItem.className = 'mb-2';
+          referenceItem.innerHTML = `
+            <p class="mb-1"><strong>${title}</strong></p>
+            <small class="text-muted">${result.querySelector('.source').textContent}</small>
+          `;
+          
+          savedReferences.appendChild(referenceItem);
+          
+          // Disable the button
+          this.disabled = true;
+          this.textContent = 'Saved';
+          this.classList.remove('btn-outline-primary');
+          this.classList.add('btn-success');
+        });
+      });
+      
+      // Handle previous step button
+      document.getElementById('prevStepBtn').addEventListener('click', function() {
+        window.location.href = 'question-formulation.html';
+      });
+      
+      // Handle next step button
+      document.getElementById('nextStepBtn').addEventListener('click', function() {
+        localStorage.setItem('currentStep', 'Hypothesis Builder');
+        window.location.href = 'hypothesis-builder.html';
+      });
+    });
+  </script>
+</body>
+</html>

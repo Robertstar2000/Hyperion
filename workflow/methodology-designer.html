@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Hypatia - Methodology Designer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: white !important;
+      font-size: 24px;
+    }
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    .nav-link:hover {
+      color: white !important;
+    }
+    .workflow-header {
+      color: white;
+      margin-bottom: 30px;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: none;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      border-bottom: none;
+      padding: 15px 20px;
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(to right, #3a67d4, #7d48d6);
+    }
+    .progress-container {
+      margin-bottom: 30px;
+    }
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .progress-bar {
+      background: linear-gradient(to right, #FF512F, #F09819);
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .step {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      position: relative;
+      width: 10%;
+    }
+    .step.active {
+      font-weight: bold;
+      color: #F09819;
+    }
+    .form-control {
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    .form-label {
+      font-weight: bold;
+    }
+    .ai-suggestion {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      color: white;
+    }
+    .ai-suggestion-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .ai-icon {
+      width: 30px;
+      height: 30px;
+      background-color: #F09819;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="../index.html">Project Hypatia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link" id="userEmail"></span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="workflow-header">
+      <h1>Methodology Designer</h1>
+      <p class="lead">Step 4 of 10: Design your experimental methodology</p>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="step-indicator">
+        <div class="step">Question</div>
+        <div class="step">Research</div>
+        <div class="step">Hypothesis</div>
+        <div class="step active">Methodology</div>
+        <div class="step">Data</div>
+        <div class="step">Experiment</div>
+        <div class="step">Analysis</div>
+        <div class="step">Conclusion</div>
+        <div class="step">Review</div>
+        <div class="step">Publication</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Design Your Methodology</h5>
+          </div>
+          <div class="card-body">
+            <form id="methodologyForm">
+              <div class="mb-3">
+                <label for="experimentType" class="form-label">Experiment Type</label>
+                <select class="form-select" id="experimentType">
+                  <option selected>Select experiment type</option>
+                  <option value="controlled">Controlled Experiment</option>
+                  <option value="observational">Observational Study</option>
+                  <option value="survey">Survey Research</option>
+                  <option value="case_study">Case Study</option>
+                  <option value="simulation">Simulation</option>
+                  <option value="field">Field Experiment</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="variables" class="form-label">Variables</label>
+                <div class="row mb-2">
+                  <div class="col">
+                    <input type="text" class="form-control" placeholder="Independent Variable" id="independentVar">
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control" placeholder="Dependent Variable" id="dependentVar">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <input type="text" class="form-control" placeholder="Control Variable 1" id="controlVar1">
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control" placeholder="Control Variable 2" id="controlVar2">
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="sampleSize" class="form-label">Sample Size</label>
+                <input type="number" class="form-control" id="sampleSize" placeholder="Enter sample size">
+              </div>
+              <div class="mb-3">
+                <label for="procedure" class="form-label">Procedure</label>
+                <textarea class="form-control" id="procedure" rows="5" placeholder="Describe your experimental procedure step by step"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="materials" class="form-label">Materials and Equipment</label>
+                <textarea class="form-control" id="materials" rows="3" placeholder="List all materials and equipment needed"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="dataCollection" class="form-label">Data Collection Method</label>
+                <textarea class="form-control" id="dataCollection" rows="3" placeholder="Describe how you will collect data"></textarea>
+              </div>
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
+                <button type="button" class="btn btn-primary" id="nextStepBtn">Next: Data Gatherer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">AI Methodology Suggestions</h5>
+          </div>
+          <div class="card-body">
+            <div class="ai-suggestion">
+              <div class="ai-suggestion-header">
+                <div class="ai-icon">AI</div>
+                <h6 class="mb-0">Experimental Design</h6>
+              </div>
+              <p>For studying temperature effects on reaction rates, consider a controlled experiment with temperature as the independent variable and reaction rate as the dependent variable.</p>
+            </div>
+            <div class="ai-suggestion">
+              <div class="ai-suggestion-header">
+                <div class="ai-icon">AI</div>
+                <h6 class="mb-0">Sample Size Recommendation</h6>
+              </div>
+              <p>To achieve statistical significance, aim for at least 30 trials at each temperature level. Consider testing 5 different temperature levels.</p>
+            </div>
+            <div class="ai-suggestion">
+              <div class="ai-suggestion-header">
+                <div class="ai-icon">AI</div>
+                <h6 class="mb-0">Control Variables</h6>
+              </div>
+              <p>Important control variables to maintain: concentration of reactants, pressure, catalyst presence, and reaction vessel size.</p>
+            </div>
+            <div class="ai-suggestion">
+              <div class="ai-suggestion-header">
+                <div class="ai-icon">AI</div>
+                <h6 class="mb-0">Data Collection Method</h6>
+              </div>
+              <p>Consider using spectrophotometry to measure concentration changes over time, or gas volume measurements for reactions producing gases.</p>
+            </div>
+            <button type="button" class="btn btn-outline-primary w-100 mt-3" id="generateMethodology">Generate Complete Methodology</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Check if user is authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!isAuthenticated || !userEmail) {
+        // Redirect to login if not authenticated
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Display user email
+      document.getElementById('userEmail').textContent = userEmail;
+      
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../login.html';
+      });
+      
+      // Handle previous step button
+      document.getElementById('prevStepBtn').addEventListener('click', function() {
+        window.location.href = 'hypothesis-builder.html';
+      });
+      
+      // Handle next step button
+      document.getElementById('nextStepBtn').addEventListener('click', function() {
+        // Save form data to localStorage
+        const experimentType = document.getElementById('experimentType').value;
+        const independentVar = document.getElementById('independentVar').value;
+        const dependentVar = document.getElementById('dependentVar').value;
+        const controlVar1 = document.getElementById('controlVar1').value;
+        const controlVar2 = document.getElementById('controlVar2').value;
+        const sampleSize = document.getElementById('sampleSize').value;
+        const procedure = document.getElementById('procedure').value;
+        const materials = document.getElementById('materials').value;
+        const dataCollection = document.getElementById('dataCollection').value;
+        
+        localStorage.setItem('experimentType', experimentType);
+        localStorage.setItem('independentVar', independentVar);
+        localStorage.setItem('dependentVar', dependentVar);
+        localStorage.setItem('controlVar1', controlVar1);
+        localStorage.setItem('controlVar2', controlVar2);
+        localStorage.setItem('sampleSize', sampleSize);
+        localStorage.setItem('procedure', procedure);
+        localStorage.setItem('materials', materials);
+        localStorage.setItem('dataCollection', dataCollection);
+        localStorage.setItem('currentStep', 'Data Gatherer');
+        
+        // Navigate to next step
+        window.location.href = 'data-gatherer.html';
+      });
+      
+      // Handle generate methodology button
+      document.getElementById('generateMethodology').addEventListener('click', function() {
+        // In a real app, this would call the LLM API
+        alert('AI would generate a complete methodology based on your experiment details.');
+        
+        // For demo purposes, fill in some sample data
+        document.getElementById('experimentType').value = 'controlled';
+        document.getElementById('independentVar').value = 'Temperature (°C)';
+        document.getElementById('dependentVar').value = 'Reaction Rate (mol/L/s)';
+        document.getElementById('controlVar1').value = 'Concentration of Reactants';
+        document.getElementById('controlVar2').value = 'Pressure';
+        document.getElementById('sampleSize').value = '30';
+        document.getElementById('procedure').value = '1. Prepare 5 water baths at different temperatures (10°C, 20°C, 30°C, 40°C, 50°C).\n2. Prepare identical reaction mixtures for each temperature.\n3. Place reaction vessels in respective water baths and allow to equilibrate.\n4. Add catalyst to start reaction and begin timing.\n5. Measure product formation at 30-second intervals for 5 minutes.\n6. Repeat each temperature condition 6 times for statistical validity.';
+        document.getElementById('materials').value = '- Temperature-controlled water baths\n- Reaction vessels (50mL beakers)\n- Thermometers\n- Stopwatch\n- Spectrophotometer\n- Reactants A and B\n- Catalyst\n- Pipettes and graduated cylinders';
+        document.getElementById('dataCollection').value = 'Measure reaction progress using spectrophotometry at 450nm wavelength. Record absorbance values at 30-second intervals and convert to concentration using a pre-established calibration curve.';
+      });
+    });
+  </script>
+</body>
+</html>

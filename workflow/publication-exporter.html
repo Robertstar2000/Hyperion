@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Hypatia - Publication Exporter</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: white !important;
+      font-size: 24px;
+    }
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    .nav-link:hover {
+      color: white !important;
+    }
+    .workflow-header {
+      color: white;
+      margin-bottom: 30px;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: none;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      border-bottom: none;
+      padding: 15px 20px;
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(to right, #3a67d4, #7d48d6);
+    }
+    .progress-container {
+      margin-bottom: 30px;
+    }
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .progress-bar {
+      background: linear-gradient(to right, #FF512F, #F09819);
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .step {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      position: relative;
+      width: 10%;
+    }
+    .step.active {
+      font-weight: bold;
+      color: #F09819;
+    }
+    .form-control {
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    .form-label {
+      font-weight: bold;
+    }
+    .paper-preview {
+      background-color: white;
+      border-radius: 10px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    .paper-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .paper-authors {
+      font-size: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #666;
+    }
+    .paper-abstract {
+      font-style: italic;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    .paper-section {
+      margin-bottom: 20px;
+    }
+    .paper-section h3 {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #4776E6;
+    }
+    .export-option {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .export-option:hover {
+      border-color: #4776E6;
+      background-color: #f8f9fa;
+    }
+    .export-option.selected {
+      border-color: #4776E6;
+      background-color: rgba(71, 118, 230, 0.1);
+    }
+    .export-icon {
+      width: 40px;
+      height: 40px;
+      background-color: #4776E6;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+    .export-details {
+      flex-grow: 1;
+    }
+    .export-details h5 {
+      margin-bottom: 5px;
+    }
+    .export-details p {
+      margin-bottom: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="../index.html">Project Hypatia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link" id="userEmail"></span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="workflow-header">
+      <h1>Publication Exporter</h1>
+      <p class="lead">Step 10 of 10: Export your research for publication</p>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="step-indicator">
+        <div class="step">Question</div>
+        <div class="step">Research</div>
+        <div class="step">Hypothesis</div>
+        <div class="step">Methodology</div>
+        <div class="step">Data</div>
+        <div class="step">Experiment</div>
+        <div class="step">Analysis</div>
+        <div class="step">Conclusion</div>
+        <div class="step">Review</div>
+        <div class="step active">Publication</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Paper Preview</h5>
+          </div>
+          <div class="card-body">
+            <div class="paper-preview">
+              <div class="paper-title">Effect of Temperature on Reaction Rates: An Experimental Study</div>
+              <div class="paper-authors">Author: <span id="paperAuthor"></span></div>
+              
+              <div class="paper-abstract">
+                <strong>Abstract:</strong> This study investigates the relationship between temperature and reaction rate in a controlled chemical system. Using the Arrhenius equation as a theoretical framework, we conducted experiments across a temperature range of 10-50°C. Our results demonstrate a clear exponential relationship between temperature and reaction rate, with an activation energy of 45.2 kJ/mol and a pre-exponential factor of 1.2 × 10⁹. These findings support the hypothesis that reaction rates approximately double for each 10°C increase in temperature within the studied range. The high R² value of 0.9982 indicates an excellent fit to the Arrhenius model, validating its applicability for predicting reaction kinetics in similar systems.
+              </div>
+              
+              <div class="paper-section">
+                <h3>1. Introduction</h3>
+                <p>Temperature is one of the most critical factors affecting the rate of chemical reactions. The relationship between temperature and reaction rate has been extensively studied and is commonly described by the Arrhenius equation. This equation provides a mathematical model that relates the rate constant of a chemical reaction to the absolute temperature, activation energy, and pre-exponential factor.</p>
+                <p>In this study, we aim to experimentally verify the Arrhenius relationship and quantify the effect of temperature on reaction rates in a controlled system. Our hypothesis predicts that reaction rates will increase exponentially with temperature, approximately doubling for each 10°C increase.</p>
+              </div>
+              
+              <div class="paper-section">
+                <h3>2. Methodology</h3>
+                <p>We conducted a controlled experiment using a model reaction system across five temperature points (10°C, 20°C, 30°C, 40°C, and 50°C). All other variables, including reactant concentration, pressure, and catalyst presence, were held constant. Reaction rates were measured using spectrophotometry, with six replicate measurements at each temperature to ensure statistical validity.</p>
+              </div>
+              
+              <div class="paper-section">
+                <h3>3. Results</h3>
+                <p>The experimental data showed a clear exponential relationship between temperature and reaction rate. The measured rates increased from 0.0015 mol/L/s at 10°C to 0.0295 mol/L/s at 50°C. Fitting the data to the Arrhenius equation yielded an activation energy of 45.2 kJ/mol and a pre-exponential factor of 1.2 × 10⁹, with an R² value of 0.9982.</p>
+              </div>
+              
+              <div class="paper-section">
+                <h3>4. Discussion</h3>
+                <p>Our results strongly support the hypothesis that reaction rates increase exponentially with temperature according to the Arrhenius equation. The high R² value indicates that the model explains nearly all of the variance in the observed data. The calculated activation energy is consistent with typical values for this type of reaction.</p>
+                <p>Limitations of this study include the relatively narrow temperature range and the focus on a single reaction type. Future research should expand the temperature range and investigate different chemical systems to test the broader applicability of these findings.</p>
+              </div>
+              
+              <div class="paper-section">
+                <h3>5. Conclusion</h3>
+                <p>This study confirms that temperature has a significant and predictable effect on reaction rates, following the Arrhenius equation. The experimental results provide quantitative parameters that can be used to predict reaction rates at different temperatures within the studied range. These findings have implications for optimizing reaction conditions in various chemical processes and understanding temperature-dependent phenomena in natural systems.</p>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+              <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
+              <button type="button" class="btn btn-primary" id="finishBtn">Finish & Return to Dashboard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Export Options</h5>
+          </div>
+          <div class="card-body">
+            <div class="export-option selected" id="pdfOption">
+              <div class="export-icon">PDF</div>
+              <div class="export-details">
+                <h5>PDF Document</h5>
+                <p>Standard format for academic papers</p>
+              </div>
+            </div>
+            <div class="export-option" id="docxOption">
+              <div class="export-icon">DOC</div>
+              <div class="export-details">
+                <h5>Word Document</h5>
+                <p>Editable format for further modifications</p>
+              </div>
+            </div>
+            <div class="export-option" id="htmlOption">
+              <div class="export-icon">HTML</div>
+              <div class="export-details">
+                <h5>Web Page</h5>
+                <p>For online publishing and sharing</p>
+              </div>
+            </div>
+            <div class="export-option" id="latexOption">
+              <div class="export-icon">TEX</div>
+              <div class="export-details">
+                <h5>LaTeX Source</h5>
+                <p>For academic journal submissions</p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary w-100 mt-3" id="exportBtn">Export Paper</button>
+            
+            <div class="mt-4">
+              <h6>Paper Metadata</h6>
+              <div class="mb-3">
+                <label for="paperTitle" class="form-label">Title</label>
+                <input type="text" class="form-control" id="paperTitle" value="Effect of Temperature on Reaction Rates: An Experimental Study">
+              </div>
+              <div class="mb-3">
+                <label for="paperKeywords" class="form-label">Keywords</label>
+                <input type="text" class="form-control" id="paperKeywords" value="Reaction kinetics, Temperature, Arrhenius equation">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Check if user is authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!isAuthenticated || !userEmail) {
+        // Redirect to login if not authenticated
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Display user email
+      document.getElementById('userEmail').textContent = userEmail;
+      document.getElementById('paperAuthor').textContent = userEmail;
+      
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../login.html';
+      });
+      
+      // Handle export options
+      const exportOptions = document.querySelectorAll('.export-option');
+      exportOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          // Remove selected class from all options
+          exportOptions.forEach(opt => opt.classList.remove('selected'));
+          // Add selected class to clicked option
+          this.classList.add('selected');
+        });
+      });
+      
+      // Handle export button
+      document.getElementById('exportBtn').addEventListener('click', function() {
+        // Get selected export format
+        const selectedOption = document.querySelector('.export-option.selected');
+        const format = selectedOption.id.replace('Option', '');
+        
+        // In a real app, this would generate and download the paper in the selected format
+        alert(`Your paper would be exported in ${format.toUpperCase()} format in the production version.`);
+      });
+      
+      // Handle previous step button
+      document.getElementById('prevStepBtn').addEventListener('click', function() {
+        window.location.href = 'peer-reviewer.html';
+      });
+      
+      // Handle finish button
+      document.getElementById('finishBtn').addEventListener('click', function() {
+        // Mark experiment as completed
+        localStorage.setItem('experimentCompleted', 'true');
+        // Navigate back to dashboard
+        window.location.href = '../dashboard.html';
+      });
+    });
+  </script>
+</body>
+</html>

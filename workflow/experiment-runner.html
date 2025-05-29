@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Hypatia - Experiment Runner</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: white !important;
+      font-size: 24px;
+    }
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    .nav-link:hover {
+      color: white !important;
+    }
+    .workflow-header {
+      color: white;
+      margin-bottom: 30px;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: none;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      color: white;
+      border-bottom: none;
+      padding: 15px 20px;
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #4776E6, #8E54E9);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(to right, #3a67d4, #7d48d6);
+    }
+    .progress-container {
+      margin-bottom: 30px;
+    }
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .progress-bar {
+      background: linear-gradient(to right, #FF512F, #F09819);
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .step {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      position: relative;
+      width: 10%;
+    }
+    .step.active {
+      font-weight: bold;
+      color: #F09819;
+    }
+    .code-editor {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      height: 300px;
+      overflow-y: auto;
+    }
+    .code-line {
+      display: block;
+      line-height: 1.5;
+    }
+    .code-comment {
+      color: #6a9955;
+    }
+    .code-keyword {
+      color: #569cd6;
+    }
+    .code-string {
+      color: #ce9178;
+    }
+    .code-function {
+      color: #dcdcaa;
+    }
+    .code-number {
+      color: #b5cea8;
+    }
+    .console-output {
+      background-color: #2d2d2d;
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      height: 200px;
+      overflow-y: auto;
+    }
+    .experiment-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .status-indicator {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .status-ready {
+      background-color: #ffc107;
+    }
+    .status-running {
+      background-color: #007bff;
+      animation: pulse 1.5s infinite;
+    }
+    .status-completed {
+      background-color: #28a745;
+    }
+    .status-error {
+      background-color: #dc3545;
+    }
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="../index.html">Project Hypatia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link" id="userEmail"></span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="workflow-header">
+      <h1>Experiment Runner</h1>
+      <p class="lead">Step 6 of 10: Run your experiment</p>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="step-indicator">
+        <div class="step">Question</div>
+        <div class="step">Research</div>
+        <div class="step">Hypothesis</div>
+        <div class="step">Methodology</div>
+        <div class="step">Data</div>
+        <div class="step active">Experiment</div>
+        <div class="step">Analysis</div>
+        <div class="step">Conclusion</div>
+        <div class="step">Review</div>
+        <div class="step">Publication</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Experiment Code</h5>
+          </div>
+          <div class="card-body">
+            <div class="experiment-status">
+              <div class="status-indicator status-ready" id="statusIndicator"></div>
+              <span id="statusText">Ready to run</span>
+            </div>
+            <div class="code-editor">
+              <span class="code-line"><span class="code-comment"># Experiment: Effect of Temperature on Reaction Rates</span></span>
+              <span class="code-line"><span class="code-comment"># Generated by Project Hypatia AI</span></span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-keyword">import</span> numpy <span class="code-keyword">as</span> np</span>
+              <span class="code-line"><span class="code-keyword">import</span> matplotlib.pyplot <span class="code-keyword">as</span> plt</span>
+              <span class="code-line"><span class="code-keyword">from</span> scipy.optimize <span class="code-keyword">import</span> curve_fit</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Define the Arrhenius equation</span></span>
+              <span class="code-line"><span class="code-keyword">def</span> <span class="code-function">arrhenius</span>(T, A, Ea, R=<span class="code-number">8.314</span>):</span>
+              <span class="code-line">    <span class="code-comment"># T: temperature in Kelvin</span></span>
+              <span class="code-line">    <span class="code-comment"># A: pre-exponential factor</span></span>
+              <span class="code-line">    <span class="code-comment"># Ea: activation energy in J/mol</span></span>
+              <span class="code-line">    <span class="code-comment"># R: gas constant in J/(mol·K)</span></span>
+              <span class="code-line">    <span class="code-keyword">return</span> A * np.exp(-Ea / (R * T))</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Generate temperature data points (convert from Celsius to Kelvin)</span></span>
+              <span class="code-line">temperatures_C = np.array([<span class="code-number">10</span>, <span class="code-number">20</span>, <span class="code-number">30</span>, <span class="code-number">40</span>, <span class="code-number">50</span>])</span>
+              <span class="code-line">temperatures_K = temperatures_C + <span class="code-number">273.15</span></span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Define true parameters for simulation</span></span>
+              <span class="code-line">A_true = <span class="code-number">1.2e9</span>  <span class="code-comment"># pre-exponential factor</span></span>
+              <span class="code-line">Ea_true = <span class="code-number">45200</span>  <span class="code-comment"># activation energy in J/mol</span></span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Calculate theoretical reaction rates</span></span>
+              <span class="code-line">true_rates = arrhenius(temperatures_K, A_true, Ea_true)</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Add some random noise to simulate experimental error</span></span>
+              <span class="code-line">np.random.seed(<span class="code-number">42</span>)  <span class="code-comment"># for reproducibility</span></span>
+              <span class="code-line">noise = np.random.normal(<span class="code-number">0</span>, <span class="code-number">0.0005</span>, len(temperatures_K))</span>
+              <span class="code-line">measured_rates = true_rates + noise</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Fit the Arrhenius equation to the measured data</span></span>
+              <span class="code-line">popt, pcov = curve_fit(<span class="code-function">arrhenius</span>, temperatures_K, measured_rates, p0=[<span class="code-number">1e9</span>, <span class="code-number">40000</span>])</span>
+              <span class="code-line">A_fit, Ea_fit = popt</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Calculate fitted rates</span></span>
+              <span class="code-line">fitted_rates = arrhenius(temperatures_K, A_fit, Ea_fit)</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Calculate R-squared value</span></span>
+              <span class="code-line">ss_tot = np.sum((measured_rates - np.mean(measured_rates))**<span class="code-number">2</span>)</span>
+              <span class="code-line">ss_res = np.sum((measured_rates - fitted_rates)**<span class="code-number">2</span>)</span>
+              <span class="code-line">r_squared = <span class="code-number">1</span> - (ss_res / ss_tot)</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Save results to a file</span></span>
+              <span class="code-line">results = np.column_stack((temperatures_C, measured_rates, fitted_rates))</span>
+              <span class="code-line">np.savetxt(<span class="code-string">'experiment_results.csv'</span>, results, delimiter=<span class="code-string">','</span>, header=<span class="code-string">'Temperature (C),Measured Rate,Fitted Rate'</span>)</span>
+              <span class="code-line"></span>
+              <span class="code-line"><span class="code-comment"># Print results</span></span>
+              <span class="code-line"><span class="code-function">print</span>(<span class="code-string">'Experiment Results:'</span>)</span>
+              <span class="code-line"><span class="code-function">print</span>(<span class="code-string">f'Fitted pre-exponential factor (A): {A_fit:.3e}'</span>)</span>
+              <span class="code-line"><span class="code-function">print</span>(<span class="code-string">f'Fitted activation energy (Ea): {Ea_fit:.1f} J/mol'</span>)</span>
+              <span class="code-line"><span class="code-function">print</span>(<span class="code-string">f'R-squared value: {r_squared:.4f}'</span>)</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+              <button type="button" class="btn btn-outline-primary" id="editCodeBtn">Edit Code</button>
+              <button type="button" class="btn btn-primary" id="runExperimentBtn">Run Experiment</button>
+            </div>
+            <div class="console-output" id="consoleOutput" style="display: none;">
+              <!-- Console output will appear here -->
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+              <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
+              <button type="button" class="btn btn-primary" id="nextStepBtn" disabled>Next: Data Analyzer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Experiment Parameters</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="experimentType" class="form-label">Experiment Type</label>
+              <input type="text" class="form-control" id="experimentType" value="Controlled Experiment" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="independentVar" class="form-label">Independent Variable</label>
+              <input type="text" class="form-control" id="independentVar" value="Temperature (°C)" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="dependentVar" class="form-label">Dependent Variable</label>
+              <input type="text" class="form-control" id="dependentVar" value="Reaction Rate (mol/L/s)" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="controlVars" class="form-label">Control Variables</label>
+              <input type="text" class="form-control" id="controlVars" value="Concentration, Pressure" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="sampleSize" class="form-label">Sample Size</label>
+              <input type="text" class="form-control" id="sampleSize" value="30" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="experimentNotes" class="form-label">Notes</label>
+              <textarea class="form-control" id="experimentNotes" rows="3" placeholder="Add notes about your experiment"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Check if user is authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!isAuthenticated || !userEmail) {
+        // Redirect to login if not authenticated
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Display user email
+      document.getElementById('userEmail').textContent = userEmail;
+      
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userEmail');
+        window.location.href = '../login.html';
+      });
+      
+      // Handle edit code button
+      document.getElementById('editCodeBtn').addEventListener('click', function() {
+        alert('In a production environment, this would open a code editor for modifying the experiment code.');
+      });
+      
+      // Handle run experiment button
+      document.getElementById('runExperimentBtn').addEventListener('click', function() {
+        // Show console output
+        const consoleOutput = document.getElementById('consoleOutput');
+        consoleOutput.style.display = 'block';
+        consoleOutput.innerHTML = '';
+        
+        // Update status
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        statusIndicator.className = 'status-indicator status-running';
+        statusText.textContent = 'Running experiment...';
+        
+        // Disable run button
+        this.disabled = true;
+        
+        // Simulate experiment running
+        setTimeout(function() {
+          // Add output lines with delay to simulate real-time output
+          addOutputLine('Initializing experiment...');
+        }, 500);
+        
+        setTimeout(function() {
+          addOutputLine('Loading temperature data points...');
+          addOutputLine('Temperatures (°C): [10, 20, 30, 40, 50]');
+          addOutputLine('Temperatures (K): [283.15, 293.15, 303.15, 313.15, 323.15]');
+        }, 1500);
+        
+        setTimeout(function() {
+          addOutputLine('Calculating theoretical reaction rates...');
+          addOutputLine('Simulating experimental measurements with random noise...');
+        }, 2500);
+        
+        setTimeout(function() {
+          addOutputLine('Fitting Arrhenius equation to measured data...');
+          addOutputLine('Calculating R-squared value...');
+        }, 3500);
+        
+        setTimeout(function() {
+          addOutputLine('Saving results to experiment_results.csv...');
+        }, 4500);
+        
+        setTimeout(function() {
+          addOutputLine('Experiment Results:');
+          addOutputLine('Fitted pre-exponential factor (A): 1.198e+09');
+          addOutputLine('Fitted activation energy (Ea): 45187.3 J/mol');
+          addOutputLine('R-squared value: 0.9982');
+          addOutputLine('Experiment completed successfully!');
+          
+          // Update status
+          statusIndicator.className = 'status-indicator status-completed';
+          statusText.textContent = 'Experiment completed';
+          
+          // Enable next step button
+          document.getElementById('nextStepBtn').disabled = false;
+          
+          // Re-enable run button
+          document.getElementById('runExperimentBtn').disabled = false;
+        }, 5500);
+      });
+      
+      function addOutputLine(text) {
+        const consoleOutput = document.getElementById('consoleOutput');
+        const line = document.createElement('div');
+        line.textContent = text;
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+      }
+      
+      // Handle previous step button
+      document.getElementById('prevStepBtn').addEventListener('click', function() {
+        window.location.href = 'data-gatherer.html';
+      });
+      
+      // Handle next step button
+      document.getElementById('nextStepBtn').addEventListener('click', function() {
+        localStorage.setItem('currentStep', 'Data Analyzer');
+        window.location.href = 'data-analyzer.html';
+      });
+    });
+  </script>
+</body>
+</html>
