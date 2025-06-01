@@ -196,6 +196,7 @@
               </select>
             </div>
             <button type="button" class="btn btn-primary w-100" id="runTestBtn">Run Statistical Test</button>
+            <button type="button" class="btn btn-info w-100 mt-3" id="generateAiAnalysisBtn">Generate AI Analysis & Interpretation</button>
             <div class="d-flex justify-content-between mt-4">
               <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
               <button type="button" class="btn btn-primary" id="nextStepBtn">Next: Conclusion Drawer</button>
@@ -222,11 +223,20 @@
             </div>
           </div>
         </div>
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">AI Data Interpretation</h5>
+          </div>
+          <div class="card-body">
+            <textarea class="form-control" id="aiInterpretationText" rows="8" placeholder="AI will generate an interpretation of the data analysis here..."></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -332,9 +342,99 @@
       
       // Handle next step button
       document.getElementById('nextStepBtn').addEventListener('click', function() {
+        // Save selections and AI interpretation
+        localStorage.setItem('selectedChartType', document.getElementById('chartType').value);
+        localStorage.setItem('selectedStatisticalTest', document.getElementById('statisticalTest').value);
+        localStorage.setItem('aiDataInterpretation', document.getElementById('aiInterpretationText').value);
+
         localStorage.setItem('currentStep', 'Conclusion Drawer');
         window.location.href = 'conclusion-drawer.html';
       });
+
+      // AI Analysis Button
+      const generateAiAnalysisBtn = document.getElementById('generateAiAnalysisBtn');
+      const aiInterpretationTextarea = document.getElementById('aiInterpretationText');
+      const chartTypeSelect = document.getElementById('chartType');
+      const statisticalTestSelect = document.getElementById('statisticalTest');
+
+      generateAiAnalysisBtn.addEventListener('click', async function() {
+        generateAiAnalysisBtn.disabled = true;
+        generateAiAnalysisBtn.textContent = 'Generating AI Insights...';
+        aiInterpretationTextarea.value = "AI is thinking...";
+
+        try {
+          // Retrieve context from localStorage
+          const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+          const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+          const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+          const actualGeneratedPythonCode = localStorage.getItem('actualGeneratedPythonCode') || "// No code from previous step.";
+          const experimentRunOutput = localStorage.getItem('experimentRunOutput');
+          const experimentRunError = localStorage.getItem('experimentRunError');
+
+          let experimentOutcomeContext = "Experiment outcome not clearly defined.";
+          if (experimentRunOutput) {
+            experimentOutcomeContext = `Experiment Result: ${experimentRunOutput}`;
+          } else if (experimentRunError) {
+            experimentOutcomeContext = `Experiment Error: ${experimentRunError}`;
+          }
+
+          const baseContext = `
+            Research Project: "${experimentTitle}"
+            Research Question: "${researchQuestion}"
+            Hypothesis: "${hypothesisStatement}"
+            Python Code Used:
+            \`\`\`python
+            ${actualGeneratedPythonCode}
+            \`\`\`
+            ${experimentOutcomeContext}
+          `;
+
+          // AI Suggests Chart Type
+          let prompt = `Given the experiment context and outcome: ${baseContext}\nSuggest a suitable chart type (e.g., scatter, line, bar, histogram, boxplot).`;
+          const suggestedChartType = await generateAiText(prompt);
+          for (let i = 0; i < chartTypeSelect.options.length; i++) {
+            if (chartTypeSelect.options[i].value.toLowerCase() === suggestedChartType.toLowerCase()) {
+              chartTypeSelect.selectedIndex = i;
+              break;
+            }
+          }
+          // Optionally, trigger chart generation here if desired: document.getElementById('generateChartBtn').click();
+
+          // AI Suggests Statistical Test
+          prompt = `Given the experiment context and outcome: ${baseContext}\nSuggest an appropriate statistical test (e.g., t_test, anova, chi_squared, correlation, regression).`;
+          const suggestedStatTest = await generateAiText(prompt);
+           for (let i = 0; i < statisticalTestSelect.options.length; i++) {
+            if (statisticalTestSelect.options[i].value.toLowerCase() === suggestedStatTest.toLowerCase()) {
+              statisticalTestSelect.selectedIndex = i;
+              break;
+            }
+          }
+          // Optionally, trigger test execution here: document.getElementById('runTestBtn').click();
+
+          // AI Generates Interpretation
+          const currentChartType = chartTypeSelect.value;
+          const currentStatTest = statisticalTestSelect.value;
+          const interpretationPrompt = `
+            Based on the following research details:
+            ${baseContext}
+            Analysis performed: Chart Type='${currentChartType}', Statistical Test='${currentStatTest}'.
+            Provide a detailed interpretation of the results. Discuss whether the hypothesis is supported, potential limitations, and key findings. This is for the AI interpretation of the results.
+          `;
+          const interpretationResult = await generateAiText(interpretationPrompt);
+          aiInterpretationTextarea.value = interpretationResult;
+
+          alert('AI analysis and interpretation generated!');
+
+        } catch (error) {
+          console.error("Error generating AI analysis:", error);
+          aiInterpretationTextarea.value = "Error generating AI interpretation. Please check console.";
+          alert('There was an error generating AI analysis. Please try again.');
+        } finally {
+          generateAiAnalysisBtn.disabled = false;
+          generateAiAnalysisBtn.textContent = 'Generate AI Analysis & Interpretation';
+        }
+      });
+
 
       // Generate initial chart on load
       document.getElementById('generateChartBtn').click();

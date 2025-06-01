@@ -270,7 +270,7 @@
                 <li>Consider adding a quantitative prediction</li>
               </ul>
             </div>
-            <button type="button" class="btn btn-outline-primary w-100 mt-3" id="refineHypothesis">Refine My Hypothesis</button>
+            <button type="button" class="btn btn-outline-primary w-100 mt-3" id="generateHypothesisAi">Generate Full Hypothesis with AI</button>
           </div>
         </div>
       </div>
@@ -278,6 +278,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -326,21 +327,84 @@
         window.location.href = 'methodology-designer.html';
       });
       
-      // Handle refine hypothesis button
-      document.getElementById('refineHypothesis').addEventListener('click', function() {
-        // In a real app, this would call the LLM API
-        alert('AI would refine your hypothesis based on your input and research.');
-        
-        // For demo purposes, fill in some sample data
-        document.getElementById('hypothesisType').value = 'directional';
-        document.getElementById('hypothesisStatement').value = 'If the temperature of the reaction environment increases from 10°C to 50°C, then the rate of the chemical reaction will increase according to the Arrhenius equation, with approximately a doubling of rate for each 10°C increase.';
-        document.getElementById('nullHypothesis').value = 'There is no relationship between temperature and the rate of the chemical reaction.';
-        document.getElementById('alternativeHypothesis').value = 'There is a positive relationship between temperature and the rate of the chemical reaction.';
-        document.getElementById('justification').value = 'According to the Arrhenius equation and the collision theory, higher temperatures provide more kinetic energy to molecules, increasing the frequency of collisions and the proportion of collisions with sufficient energy to overcome the activation energy barrier. This is supported by multiple studies in the literature review.';
-        
-        // Update quality meter
-        document.querySelector('.quality-fill').style.width = '90%';
-        document.querySelector('.hypothesis-quality span:last-child').textContent = '90%';
+      // Handle refine hypothesis button (now Generate Full Hypothesis with AI)
+      const generateHypothesisAiBtn = document.getElementById('generateHypothesisAi');
+      const hypothesisTypeSelect = document.getElementById('hypothesisType');
+      const hypothesisStatementTextarea = document.getElementById('hypothesisStatement');
+      const nullHypothesisTextarea = document.getElementById('nullHypothesis');
+      const alternativeHypothesisTextarea = document.getElementById('alternativeHypothesis');
+      const justificationTextarea = document.getElementById('justification');
+
+      generateHypothesisAiBtn.addEventListener('click', async function() {
+        // Retrieve data from localStorage
+        const experimentTitle = localStorage.getItem('experimentTitle') || "Not specified";
+        const researchQuestion = localStorage.getItem('researchQuestion') || "Not specified";
+        const researchDomain = localStorage.getItem('researchDomain') || "Not specified";
+        const keywords = localStorage.getItem('keywords') || "Not specified";
+        // const savedReferences = JSON.parse(localStorage.getItem('savedReferences')) || []; // Assuming savedReferences is an array
+
+        const baseContext = `
+          Experiment Title: ${experimentTitle}
+          Research Question: ${researchQuestion}
+          Research Domain: ${researchDomain}
+          Keywords: ${keywords}
+          Previously saved references: (mocked for now - none)
+        `;
+
+        generateHypothesisAiBtn.disabled = true;
+        generateHypothesisAiBtn.textContent = 'Generating...';
+
+        try {
+          // Hypothesis Type
+          const typePrompt = `Based on the following research context, suggest a hypothesis type (e.g., directional, non_directional, null, alternative):
+      ${baseContext}`;
+          const genHypothesisType = await generateAiText(typePrompt);
+          let typeSet = false;
+          for (let i = 0; i < hypothesisTypeSelect.options.length; i++) {
+            if (hypothesisTypeSelect.options[i].value.toLowerCase() === genHypothesisType.toLowerCase()) {
+              hypothesisTypeSelect.selectedIndex = i;
+              typeSet = true;
+              break;
+            }
+          }
+          if (!typeSet) console.warn(`AI generated hypothesis type '${genHypothesisType}' not in dropdown.`);
+
+          // Hypothesis Statement
+          const statementPrompt = `Given the research context:
+      ${baseContext}
+      Generate a concise and testable hypothesis statement.`;
+          hypothesisStatementTextarea.value = await generateAiText(statementPrompt);
+
+          // Null Hypothesis
+          const nullPrompt = `Given the research context:
+      ${baseContext}
+      And the main hypothesis: "${hypothesisStatementTextarea.value}"
+      Generate a corresponding null hypothesis (H0).`;
+          nullHypothesisTextarea.value = await generateAiText(nullPrompt);
+
+          // Alternative Hypothesis
+          const altPrompt = `Given the research context:
+      ${baseContext}
+      And the main hypothesis: "${hypothesisStatementTextarea.value}"
+      Generate a corresponding alternative hypothesis (H1). This should align with the main hypothesis if it's not a null/alternative pair already.`;
+          alternativeHypothesisTextarea.value = await generateAiText(altPrompt);
+
+          // Justification
+          const justPrompt = `Given the research context:
+      ${baseContext}
+      And the formulated hypothesis: "${hypothesisStatementTextarea.value}"
+      Provide a brief justification for this hypothesis.`;
+          justificationTextarea.value = await generateAiText(justPrompt);
+
+          alert('AI suggestions for the hypothesis fields have been generated and populated!');
+
+        } catch (error) {
+          console.error("Error generating AI hypothesis suggestions:", error);
+          alert('There was an error generating AI hypothesis suggestions. Please try again.');
+        } finally {
+          generateHypothesisAiBtn.disabled = false;
+          generateHypothesisAiBtn.textContent = 'Generate Full Hypothesis with AI';
+        }
       });
     });
   </script>
