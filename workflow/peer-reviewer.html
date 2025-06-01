@@ -321,7 +321,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -360,99 +360,141 @@
 
       const reviewResponseTextarea = document.getElementById('reviewResponse');
       const plannedRevisionsTextarea = document.getElementById('plannedRevisions');
+      const scoreElements = {
+          ScientificMerit: { text: document.getElementById('scoreScientificMerit'), bar: document.getElementById('fillScientificMerit') },
+          Methodology: { text: document.getElementById('scoreMethodology'), bar: document.getElementById('fillMethodology') },
+          DataAnalysis: { text: document.getElementById('scoreDataAnalysis'), bar: document.getElementById('fillDataAnalysis') },
+          ConclusionValidity: { text: document.getElementById('scoreConclusionValidity'), bar: document.getElementById('fillConclusionValidity') }
+      };
+      const reviewStrengthsP = document.getElementById('reviewStrengthsP');
+      const reviewImprovementP = document.getElementById('reviewImprovementP');
+      const reviewRecommendationsList = document.getElementById('reviewRecommendationsList');
+      const reviewResponseTextarea = document.getElementById('reviewResponse');
+      const plannedRevisionsTextarea = document.getElementById('plannedRevisions');
       const generateAiReviewBtn = document.getElementById('generateAiReviewBtn');
       const nextStepBtn = document.getElementById('nextStepBtn');
 
+      function initializeReviewFields() {
+          for (const key in scoreElements) {
+              if (scoreElements[key].text) scoreElements[key].text.textContent = "0/10";
+              if (scoreElements[key].bar) scoreElements[key].bar.style.width = "0%";
+          }
+          if (reviewStrengthsP) reviewStrengthsP.textContent = "AI Review Strengths pending...";
+          if (reviewImprovementP) reviewImprovementP.textContent = "AI Review Areas for Improvement pending...";
+          if (reviewRecommendationsList) reviewRecommendationsList.innerHTML = "<li>AI Review Recommendations pending...</li>";
+          if (reviewResponseTextarea) reviewResponseTextarea.value = "";
+          if (plannedRevisionsTextarea) plannedRevisionsTextarea.value = "";
+      }
+      initializeReviewFields(); // Call on load
 
       generateAiReviewBtn.addEventListener('click', async function() {
-        generateAiReviewBtn.disabled = true;
-        generateAiReviewBtn.textContent = 'Generating AI Review...';
+        const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+        const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+        const procedure = localStorage.getItem('procedure') || "N/A"; // Assuming this is a summary
+        const aiDataInterpretation = localStorage.getItem('aiDataInterpretation') || "N/A";
+        const conclusionSummary = localStorage.getItem('conclusionSummary') || "N/A";
+        const limitations = localStorage.getItem('limitations') || "N/A";
+        const conclusionStatus = localStorage.getItem('conclusionStatus') || "N/A";
 
-        // Clear previous content
-        reviewStrengthsPEl.textContent = "Generating...";
-        reviewImprovementPEl.textContent = "Generating...";
-        reviewRecommendationsListEl.innerHTML = '<li>Generating...</li>';
-        reviewResponseTextarea.value = "Generating...";
-        plannedRevisionsTextarea.value = "Generating...";
-        ['ScientificMerit', 'Methodology', 'DataAnalysis', 'ConclusionValidity'].forEach(s => {
-            document.getElementById(`score${s}`).textContent = `...`;
-            document.getElementById(`fill${s}`).style.width = `0%`;
-        });
+
+        const fullProjectContext = `
+          Project Title: ${experimentTitle}
+          Hypothesis: "${hypothesisStatement}" (Status: ${conclusionStatus})
+          Methodology Summary: ${procedure.substring(0, 150)}...
+          AI Data Interpretation: "${aiDataInterpretation}"
+          Conclusion Summary: "${conclusionSummary}"
+          Identified Limitations: "${limitations}"
+          This represents a summary of a research project.
+        `;
+
+        generateAiReviewBtn.disabled = true;
+        generateAiReviewBtn.textContent = 'Generating AI Review & Response...';
+        initializeReviewFields();
 
         try {
-          const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
-          const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
-          const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
-          const methodologySummary = `Type: ${localStorage.getItem('experimentType')}, IV: ${localStorage.getItem('independentVar')}, DV: ${localStorage.getItem('dependentVar')}`; // Simplified
-          const aiDataInterpretation = localStorage.getItem('aiDataInterpretation') || "N/A";
-          const conclusionSummary = localStorage.getItem('conclusionSummary') || "N/A";
-          const limitations = localStorage.getItem('limitations') || "N/A";
-          const futureDirections = localStorage.getItem('futureDirections') || "N/A";
-
-          const baseContext = `
-            Research Title: ${experimentTitle}
-            Research Question: ${researchQuestion}
-            Hypothesis: ${hypothesisStatement}
-            Methodology Summary: ${methodologySummary}
-            AI Data Interpretation: ${aiDataInterpretation}
-            Conclusion Summary: ${conclusionSummary}
-            Identified Limitations: ${limitations}
-            Proposed Future Directions: ${futureDirections}
-          `;
-
-          let aiGeneratedScores = {};
-          const aspects = ['ScientificMerit', 'Methodology', 'DataAnalysis', 'ConclusionValidity'];
-          for (const aspect of aspects) {
-            const prompt = `Critically assess the ${aspect.replace(/([A-Z])/g, ' $1').trim()} of a study with context: ${baseContext}. Respond with a score out of 10 (e.g., '8.5').`;
-            const scoreText = await generateAiText(prompt);
-            const score = parseFloat(scoreText) || 0;
-            aiGeneratedScores[aspect] = score;
-            document.getElementById(`score${aspect}`).textContent = `${score}/10`;
-            document.getElementById(`fill${aspect}`).style.width = `${score * 10}%`;
+          async function fetchAiData(promptContent) {
+              const response = await fetch('http://localhost:5000/api/generate', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prompt: promptContent }),
+              });
+              if (!response.ok) {
+                  const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+                  throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
+              }
+              const data = await response.json();
+              if (data.error) {
+                  throw new Error(`AI Error: ${data.error}`);
+              }
+              return data.text || '';
           }
 
-          const strengthsPrompt = `Based on the study context: ${baseContext}, identify 2-3 key strengths of this research. Present as a paragraph.`;
-          const strengthsText = await generateAiText(strengthsPrompt);
-          reviewStrengthsPEl.textContent = strengthsText;
+          let aiPeerReviewData = { scores: {} };
 
-          const improvementPrompt = `Based on the study context: ${baseContext}, identify 2-3 key areas for improvement. Present as a paragraph.`;
-          const improvementText = await generateAiText(improvementPrompt);
-          reviewImprovementPEl.textContent = improvementText;
-
-          const recommendationsPrompt = `Based on the study context: ${baseContext}, list 3-4 specific, actionable recommendations as bullet points (use '*' for bullets, each on a new line).`;
-          const recommendationsText = await generateAiText(recommendationsPrompt);
-          reviewRecommendationsListEl.innerHTML = ''; // Clear loading/previous
-          recommendationsText.split('*').forEach(rec => {
-            if (rec.trim()) {
-              const li = document.createElement('li');
-              li.textContent = rec.trim();
-              reviewRecommendationsListEl.appendChild(li);
+          for (const aspect in scoreElements) {
+            const scorePrompt = `Critically assess the '${aspect}' of a research study summarized as follows: ${fullProjectContext}. Respond with only a numerical score out of 10 (e.g., '8.5').`;
+            const scoreText = (await fetchAiData(scorePrompt)).trim();
+            const score = parseFloat(scoreText);
+            if (!isNaN(score) && scoreElements[aspect].text && scoreElements[aspect].bar) {
+              scoreElements[aspect].text.textContent = `${score.toFixed(1)}/10`;
+              scoreElements[aspect].bar.style.width = `${score * 10}%`;
+              aiPeerReviewData.scores[aspect] = score.toFixed(1);
+            } else {
+              console.warn(\`AI returned invalid score for \${aspect}: \${scoreText}\`);
+              if(scoreElements[aspect].text) scoreElements[aspect].text.textContent = "N/A";
+              if(scoreElements[aspect].bar) scoreElements[aspect].bar.style.width = "0%";
+              aiPeerReviewData.scores[aspect] = "N/A";
             }
-          });
+          }
 
-          const generatedReviewSummary = `Strengths: ${strengthsText}\nAreas for Improvement: ${improvementText}\nRecommendations:\n${recommendationsText}`;
+          const strengthsPrompt = `Based on the research summary:\n${fullProjectContext}\nIdentify 2-3 key strengths of this research. Present as a concise paragraph.`;
+          aiPeerReviewData.strengths = await fetchAiData(strengthsPrompt);
+          if (reviewStrengthsP) reviewStrengthsP.textContent = aiPeerReviewData.strengths || "AI could not generate strengths.";
 
-          const responseDraftPrompt = `Given this AI-generated peer review: ${generatedReviewSummary}\n\nDraft a polite and constructive response from the researcher to this review.`;
-          reviewResponseTextarea.value = await generateAiText(responseDraftPrompt);
+          const improvementPrompt = `Based on the research summary:\n${fullProjectContext}\nIdentify 2-3 key areas for improvement. Present as a concise paragraph.`;
+          aiPeerReviewData.areasForImprovement = await fetchAiData(improvementPrompt);
+          if (reviewImprovementP) reviewImprovementP.textContent = aiPeerReviewData.areasForImprovement || "AI could not generate areas for improvement.";
 
-          const revisionsPlanPrompt = `Based on this AI-generated peer review: ${generatedReviewSummary}\n\nList specific revisions the researcher plans to make.`;
-          plannedRevisionsTextarea.value = await generateAiText(revisionsPlanPrompt);
+          const recommendationsPrompt = `Based on the research summary:\n${fullProjectContext}\nList 3-4 specific, actionable recommendations for improving this research. Start each with '*' for a bullet point.`;
+          const recommendationsRaw = await fetchAiData(recommendationsPrompt);
+          aiPeerReviewData.recommendations = recommendationsRaw.split('*').map(rec => rec.trim()).filter(rec => rec);
+          if (reviewRecommendationsList) {
+            reviewRecommendationsList.innerHTML = '';
+            if (aiPeerReviewData.recommendations.length > 0) {
+              aiPeerReviewData.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                reviewRecommendationsList.appendChild(li);
+              });
+            } else {
+              reviewRecommendationsList.innerHTML = "<li>AI could not generate recommendations.</li>";
+            }
+          }
+          localStorage.setItem('aiPeerReviewData', JSON.stringify(aiPeerReviewData));
 
-          localStorage.setItem('aiPeerReviewData', JSON.stringify({
-            scores: aiGeneratedScores,
-            strengths: strengthsText,
-            improvements: improvementText,
-            recommendations: recommendationsText
-          }));
+          const generatedReviewSummary = `
+              Overall Scores: ${JSON.stringify(aiPeerReviewData.scores)}
+              Strengths Noted: ${aiPeerReviewData.strengths}
+              Areas for Improvement: ${aiPeerReviewData.areasForImprovement}
+              Specific Recommendations: ${aiPeerReviewData.recommendations.join('; ')}
+          `;
 
-          alert('AI Peer Review and Draft Response have been generated!');
+          const responseDraftPrompt = `Given this AI-generated peer review of a research project:\n${generatedReviewSummary}\nDraft a polite and constructive response from the researcher to this review, acknowledging the points made.`;
+          if(reviewResponseTextarea) reviewResponseTextarea.value = await fetchAiData(responseDraftPrompt);
+
+          const revisionsDraftPrompt = `Based on this AI-generated peer review:\n${generatedReviewSummary}\nList specific revisions the researcher plans to make to the project.`;
+          if(plannedRevisionsTextarea) plannedRevisionsTextarea.value = await fetchAiData(revisionsDraftPrompt);
+
+          alert('AI-generated peer review and draft response have been populated from the live API!');
 
         } catch (error) {
-          console.error("Error generating AI Peer Review:", error);
-          alert('An error occurred while generating the AI review. Please check the console.');
-          reviewStrengthsPEl.textContent = "Error loading review.";
-          reviewImprovementPEl.textContent = "Error loading review.";
-          reviewRecommendationsListEl.innerHTML = '<li>Error loading recommendations.</li>';
+          console.error("Error during AI peer review generation:", error);
+          alert(`There was an error during AI peer review generation: ${error.message}`);
+          // Optionally reset fields further or display error in specific fields
+          if (reviewStrengthsP) reviewStrengthsP.textContent = "Error generating review.";
+          if (reviewImprovementP) reviewImprovementP.textContent = "Error generating review.";
+          if (reviewRecommendationsList) reviewRecommendationsList.innerHTML = "<li>Error.</li>";
+
         } finally {
           generateAiReviewBtn.disabled = false;
           generateAiReviewBtn.textContent = 'Generate AI Peer Review & Draft Response';
@@ -464,8 +506,9 @@
       });
       
       nextStepBtn.addEventListener('click', function() {
-        localStorage.setItem('researcherResponseToReview', reviewResponseTextarea.value);
-        localStorage.setItem('plannedRevisionsBasedOnReview', plannedRevisionsTextarea.value);
+        if(reviewResponseTextarea) localStorage.setItem('researcherResponseToReview', reviewResponseTextarea.value);
+        if(plannedRevisionsTextarea) localStorage.setItem('plannedRevisionsBasedOnReview', plannedRevisionsTextarea.value);
+        // aiPeerReviewData is already saved within the generateAiReviewBtn listener
         localStorage.setItem('currentStep', 'Published');
         window.location.href = 'publication-exporter.html';
       });

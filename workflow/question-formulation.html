@@ -243,7 +243,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -292,7 +292,7 @@
       const keywordsInput = document.getElementById('keywords');
       const researchDomainSelect = document.getElementById('researchDomain');
 
-      generateAiSuggestionsBtn.addEventListener('click', async function() { // Make function async
+      generateAiSuggestionsBtn.addEventListener('click', async function() {
         const title = experimentTitleInput.value.trim();
         const question = researchQuestionInput.value.trim();
 
@@ -301,40 +301,73 @@
           return;
         }
 
-        // Show some loading indicator (optional)
         generateAiSuggestionsBtn.disabled = true;
         generateAiSuggestionsBtn.textContent = 'Generating...';
 
         try {
-          // Generate Keywords
-          const keywordsPrompt = `Generate relevant keywords for a research project titled '${title}' with the research question: '${question}'`;
-          const generatedKeywords = await generateAiText(keywordsPrompt); // Assuming generateAiText is globally available
-          keywordsInput.value = generatedKeywords;
+          // --- Generate Keywords ---
+          const keywordsPrompt = `Generate a comma-separated list of 3-5 relevant keywords for a research project titled '${title}' with the research question: '${question}'`;
+          let response = await fetch('http://localhost:5000/api/generate', { // Assuming backend runs on port 5000
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: keywordsPrompt }),
+          });
 
-          // Generate Research Domain
-          const domainPrompt = `Determine the most appropriate research domain for a project titled '${title}' and research question: '${question}'`;
-          const generatedDomain = await generateAiText(domainPrompt);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to get error details from keywords API' }));
+            throw new Error(`Keywords API Error: ${response.status} ${response.statusText}. Details: ${errorData.error || 'Unknown'}`);
+          }
+          let data = await response.json();
+          if (data.error) {
+              throw new Error(`Keywords AI Error: ${data.error}`);
+          }
+          keywordsInput.value = data.text || '';
 
-          // Attempt to set the domain in the dropdown
+          // --- Generate Research Domain ---
+          const domainPrompt = `Determine the most appropriate research domain (e.g., Biology, Chemistry, Computer Science, Psychology, Sociology, Physics, Other) for a project titled '${title}' and research question: '${question}'. Respond with only the domain name.`;
+          response = await fetch('http://localhost:5000/api/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: domainPrompt }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to get error details from domain API' }));
+            throw new Error(`Domain API Error: ${response.status} ${response.statusText}. Details: ${errorData.error || 'Unknown'}`);
+          }
+          data = await response.json();
+          if (data.error) {
+              throw new Error(`Domain AI Error: ${data.error}`);
+          }
+          const generatedDomain = data.text ? data.text.trim() : '';
+
           let domainSet = false;
-          for (let i = 0; i < researchDomainSelect.options.length; i++) {
-            if (researchDomainSelect.options[i].value.toLowerCase() === generatedDomain.toLowerCase()) {
-              researchDomainSelect.selectedIndex = i;
-              domainSet = true;
-              break;
-            }
+          if (generatedDomain) {
+              for (let i = 0; i < researchDomainSelect.options.length; i++) {
+                if (researchDomainSelect.options[i].value.toLowerCase() === generatedDomain.toLowerCase()) {
+                  researchDomainSelect.selectedIndex = i;
+                  domainSet = true;
+                  break;
+                }
+              }
           }
-          if (!domainSet) {
+          if (!domainSet && generatedDomain) {
             console.warn(`AI generated domain '${generatedDomain}' not found in dropdown. User may need to select manually or add 'Other'.`);
-            // Optionally set to 'Other' or leave as is
+            // Optionally set to 'Other' or if 'other' is a value in dropdown:
             // researchDomainSelect.value = 'other';
+          } else if (!generatedDomain) {
+              console.warn('AI did not return a domain.');
           }
 
-          alert('AI suggestions for Keywords and Research Domain have been generated and populated!');
+          alert('AI suggestions for Keywords and Research Domain have been generated and populated from the live API!');
 
         } catch (error) {
-          console.error("Error generating AI suggestions:", error);
-          alert('There was an error generating AI suggestions. Please try again.');
+          console.error("Error generating AI suggestions via API:", error);
+          alert(`There was an error generating AI suggestions: ${error.message}`);
         } finally {
           generateAiSuggestionsBtn.disabled = false;
           generateAiSuggestionsBtn.textContent = 'Generate AI Suggestions';

@@ -276,7 +276,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -335,7 +335,6 @@
       
       // Handle generate methodology button
       const generateMethodologyBtn = document.getElementById('generateMethodology');
-      // Form field elements
       const experimentTypeSelect = document.getElementById('experimentType');
       const independentVarInput = document.getElementById('independentVar');
       const dependentVarInput = document.getElementById('dependentVar');
@@ -347,18 +346,12 @@
       const dataCollectionTextarea = document.getElementById('dataCollection');
 
       generateMethodologyBtn.addEventListener('click', async function() {
-        // Retrieve data from localStorage
         const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
         const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
         const researchDomain = localStorage.getItem('researchDomain') || "N/A";
         const keywords = localStorage.getItem('keywords') || "N/A";
-        // const savedReferences = JSON.parse(localStorage.getItem('savedReferences')) || []; // Mocked
         const hypothesisType = localStorage.getItem('hypothesisType') || "N/A";
         const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
-        const nullHypothesis = localStorage.getItem('nullHypothesis') || "N/A";
-        const alternativeHypothesis = localStorage.getItem('alternativeHypothesis') || "N/A";
-        const justification = localStorage.getItem('justification') || "N/A";
-
 
         const baseContext = `
           Project Details:
@@ -368,84 +361,74 @@
           Keywords: ${keywords}
           Hypothesis Type: ${hypothesisType}
           Hypothesis Statement: "${hypothesisStatement}"
-          Null Hypothesis: "${nullHypothesis}"
-          Alternative Hypothesis: "${alternativeHypothesis}"
-          Justification: "${justification}"
-          Previous research: (mocked - none)
         `;
 
         generateMethodologyBtn.disabled = true;
         generateMethodologyBtn.textContent = 'Generating Methodology...';
 
         try {
-          // Experiment Type
-          let prompt = `Based on the context:
-      ${baseContext}
-      Suggest an appropriate experiment type (e.g., controlled, observational, survey, case_study, simulation, field).`;
-          const genExperimentType = await generateAiText(prompt);
-          let typeSet = false;
-          for (let i = 0; i < experimentTypeSelect.options.length; i++) {
-            if (experimentTypeSelect.options[i].value.toLowerCase() === genExperimentType.toLowerCase()) {
-              experimentTypeSelect.selectedIndex = i;
-              typeSet = true;
-              break;
+          async function fetchAiData(promptContent) {
+            const response = await fetch('http://localhost:5000/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: promptContent }),
+            });
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+              throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
             }
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(`AI Error: ${data.error}`);
+            }
+            return data.text || '';
           }
-          if (!typeSet) console.warn(`AI generated experiment type '${genExperimentType}' not in dropdown. Defaulting or manual selection needed.`);
 
-          // Independent Variable
-          prompt = `Based on the context:
-      ${baseContext}
-      Define the primary independent variable.`;
-          independentVarInput.value = await generateAiText(prompt);
+          let prompt = `Based on the context:\n${baseContext}\nSuggest an appropriate experiment type (e.g., controlled, observational, survey, simulation). Respond with only the suggested type.`;
+          const genExperimentType = (await fetchAiData(prompt)).trim();
+          if (genExperimentType) {
+              let typeSet = false;
+              for (let i = 0; i < experimentTypeSelect.options.length; i++) {
+                if (experimentTypeSelect.options[i].value.toLowerCase() === genExperimentType.toLowerCase()) {
+                  experimentTypeSelect.selectedIndex = i;
+                  typeSet = true;
+                  break;
+                }
+              }
+              if (!typeSet) console.warn(\`AI generated experiment type '${genExperimentType}' not in dropdown.\`);
+          } else {
+              console.warn('AI did not return an experiment type.');
+          }
 
-          // Dependent Variable
-          prompt = `Based on the context:
-      ${baseContext}
-      Define the primary dependent variable.`;
-          dependentVarInput.value = await generateAiText(prompt);
+          prompt = `Based on the context:\n${baseContext}\nDefine the primary independent variable for this experiment.`;
+          independentVarInput.value = await fetchAiData(prompt);
 
-          // Control Variable 1
-          prompt = `Based on the context:
-      ${baseContext}
-      Suggest a key control variable.`;
-          controlVar1Input.value = await generateAiText(prompt);
+          prompt = `Based on the context:\n${baseContext}\nDefine the primary dependent variable that will be measured.`;
+          dependentVarInput.value = await fetchAiData(prompt);
 
-          // Control Variable 2
-          prompt = `Based on the context:
-      ${baseContext}
-      Suggest another important control variable.`;
-          controlVar2Input.value = await generateAiText(prompt);
+          prompt = `Based on the context:\n${baseContext}\nSuggest one key control variable that needs to be kept constant.`;
+          controlVar1Input.value = await fetchAiData(prompt);
 
-          // Sample Size
-          prompt = `Based on the context:
-      ${baseContext}
-      Recommend a suitable sample size or number of trials.`;
-          sampleSizeInput.value = await generateAiText(prompt);
+          prompt = `Based on the context:\n${baseContext}\nSuggest a second important control variable.`;
+          controlVar2Input.value = await fetchAiData(prompt);
 
-          // Procedure
-          prompt = `Based on the context:
-      ${baseContext}
-      Outline a detailed, step-by-step experimental procedure.`;
-          procedureTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the context:\n${baseContext}\nRecommend a suitable sample size or number of trials/replicates. Provide a brief justification if possible.`;
+          sampleSizeInput.value = await fetchAiData(prompt);
 
-          // Materials and Equipment
-          prompt = `Based on the context:
-      ${baseContext}
-      List necessary materials and equipment.`;
-          materialsTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the context:\n${baseContext}\nAnd the defined variables (IV: ${independentVarInput.value || 'Not yet defined'}, DV: ${dependentVarInput.value || 'Not yet defined'}), outline a detailed, step-by-step experimental procedure.`;
+          procedureTextarea.value = await fetchAiData(prompt);
 
-          // Data Collection Method
-          prompt = `Based on the context:
-      ${baseContext}
-      Describe the data collection method.`;
-          dataCollectionTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the context and the procedure:\n${procedureTextarea.value || 'Procedure not yet defined'}\nList necessary materials and equipment.`;
+          materialsTextarea.value = await fetchAiData(prompt);
 
-          alert('AI suggestions for the methodology have been generated and populated!');
+          prompt = `Based on the context, procedure, and variables (especially DV: ${dependentVarInput.value || 'Not yet defined'}):\n${baseContext}\nDescribe the specific method for collecting data on the dependent variable.`;
+          dataCollectionTextarea.value = await fetchAiData(prompt);
+
+          alert('AI suggestions for the methodology have been generated from the live API and populated!');
 
         } catch (error) {
           console.error("Error generating AI methodology suggestions:", error);
-          alert('There was an error generating AI methodology suggestions. Please try again.');
+          alert(`There was an error generating AI methodology suggestions: ${error.message}`);
         } finally {
           generateMethodologyBtn.disabled = false;
           generateMethodologyBtn.textContent = 'Generate Complete Methodology';

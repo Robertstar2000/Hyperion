@@ -1,0 +1,4 @@
+Flask>=2.0
+python-dotenv>=0.15
+google-generativeai>=0.3  # Or the latest version
+Flask-CORS>=3.0 # For handling Cross-Origin Resource Sharing

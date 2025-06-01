@@ -269,7 +269,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -296,81 +296,109 @@
       const hypothesisDisplay = document.getElementById('hypothesisDisplay');
       const conclusionStatusDisplay = document.getElementById('conclusionStatusDisplay');
       const generateConclusionBtn = document.getElementById('generateConclusionBtn');
-      const conclusionSummaryTextarea = document.getElementById('conclusionSummary');
-      const evidenceSupportTextarea = document.getElementById('evidenceSupport');
-      const limitationsTextarea = document.getElementById('limitations');
-      const futureDirectionsTextarea = document.getElementById('futureDirections');
+      const conclusionSummary = document.getElementById('conclusionSummary'); // Corrected variable name
+      const evidenceSupport = document.getElementById('evidenceSupport');   // Corrected variable name
+      const limitations = document.getElementById('limitations');       // Corrected variable name
+      const futureDirections = document.getElementById('futureDirections'); // Corrected variable name
       const nextStepBtn = document.getElementById('nextStepBtn');
 
-      // Load hypothesis statement
-      hypothesisDisplay.textContent = localStorage.getItem('hypothesisStatement') || 'Hypothesis statement not found.';
+      if (hypothesisDisplay) {
+          hypothesisDisplay.textContent = localStorage.getItem('hypothesisStatement') || "Hypothesis not found in local storage.";
+      }
+      if (conclusionStatusDisplay) {
+          conclusionStatusDisplay.textContent = "Pending AI Analysis"; // Initial state
+          conclusionStatusDisplay.className = 'conclusion-status'; // Reset class
+      }
 
       generateConclusionBtn.addEventListener('click', async function() {
+        const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+        const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+        const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+        const aiDataInterpretation = localStorage.getItem('aiDataInterpretation') || "Data interpretation not available.";
+        const experimentRunOutput = localStorage.getItem('experimentRunOutput') || "";
+        const experimentRunError = localStorage.getItem('experimentRunError') || "";
+        let experimentOutcomeContext = experimentRunError ? `Experiment failed: ${experimentRunError}` : `Experiment output: ${experimentRunOutput}`;
+        if (!experimentRunError && !experimentRunOutput) experimentOutcomeContext = "Experiment outcome not recorded.";
+
+        const baseContext = `
+          Project Title: ${experimentTitle}
+          Research Question: ${researchQuestion}
+          Hypothesis: "${hypothesisStatement}"
+          Experiment Outcome: ${experimentOutcomeContext}
+          AI's Interpretation of Data/Results: "${aiDataInterpretation}"
+        `;
+
         generateConclusionBtn.disabled = true;
         generateConclusionBtn.textContent = 'Generating Conclusion...';
-        conclusionSummaryTextarea.value = "AI is thinking...";
-        evidenceSupportTextarea.value = "AI is thinking...";
-        limitationsTextarea.value = "AI is thinking...";
-        futureDirectionsTextarea.value = "AI is thinking...";
-        conclusionStatusDisplay.textContent = 'Analyzing...';
-        conclusionStatusDisplay.className = 'conclusion-status status-inconclusive';
+        if(conclusionSummary) conclusionSummary.value = "AI is thinking...";
+        if(evidenceSupport) evidenceSupport.value = "AI is thinking...";
+        if(limitations) limitations.value = "AI is thinking...";
+        if(futureDirections) futureDirections.value = "AI is thinking...";
+        if(conclusionStatusDisplay) {
+            conclusionStatusDisplay.textContent = 'Analyzing...';
+            conclusionStatusDisplay.className = 'conclusion-status status-inconclusive';
+        }
 
 
         try {
-          // Retrieve context from localStorage
-          const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
-          const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
-          const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
-          const experimentRunOutput = localStorage.getItem('experimentRunOutput');
-          const experimentRunError = localStorage.getItem('experimentRunError');
-          const aiDataInterpretation = localStorage.getItem('aiDataInterpretation') || "No AI interpretation from previous step.";
-
-          let experimentOutcomeContext = "Experiment outcome: Not clearly defined from previous step.";
-          if (experimentRunOutput) {
-            experimentOutcomeContext = `Experiment Result: ${experimentRunOutput}`;
-          } else if (experimentRunError) {
-            experimentOutcomeContext = `Experiment Error: ${experimentRunError}`;
+          async function fetchAiData(promptContent) {
+            const response = await fetch('http://localhost:5000/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: promptContent }),
+            });
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+              throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
+            }
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(`AI Error: ${data.error}`);
+            }
+            return data.text || '';
           }
 
-          const baseContext = `
-            Research Project: "${experimentTitle}"
-            Research Question: "${researchQuestion}"
-            Hypothesis: "${hypothesisStatement}"
-            ${experimentOutcomeContext}
-            AI Data Interpretation from Previous Step: "${aiDataInterpretation}"
-          `;
+          let prompt = `Based on the hypothesis: "${hypothesisStatement}" and the AI's data interpretation: "${aiDataInterpretation}", does the evidence strongly support, moderately support, offer mixed support, show no support, or refute the hypothesis? Respond with one of: 'Strongly Supports Hypothesis', 'Moderately Supports Hypothesis', 'Mixed Support for Hypothesis', 'No Support for Hypothesis', 'Refutes Hypothesis'.`;
+          const statusResponse = (await fetchAiData(prompt)).trim();
 
-          // AI Determines Conclusion Status
-          const statusPrompt = `Based on the hypothesis: '${hypothesisStatement}' and the data interpretation: '${aiDataInterpretation}', does the evidence support, refute, or is it inconclusive regarding the hypothesis? Respond with 'Supports Hypothesis', 'Refutes Hypothesis', or 'Inconclusive'.`;
-          const statusResponse = await generateAiText(statusPrompt);
-          conclusionStatusDisplay.textContent = statusResponse;
-          if (statusResponse.toLowerCase().includes('supports')) {
-            conclusionStatusDisplay.className = 'conclusion-status status-supports';
-          } else if (statusResponse.toLowerCase().includes('refutes')) {
-            conclusionStatusDisplay.className = 'conclusion-status status-refutes';
-          } else {
-            conclusionStatusDisplay.className = 'conclusion-status status-inconclusive';
+          if (conclusionStatusDisplay) {
+              conclusionStatusDisplay.textContent = statusResponse || "AI status pending";
+              conclusionStatusDisplay.className = 'conclusion-status';
+              if (statusResponse.toLowerCase().includes("supports")) {
+                  conclusionStatusDisplay.classList.add('status-supports');
+              } else if (statusResponse.toLowerCase().includes("refutes")) {
+                  conclusionStatusDisplay.classList.add('status-refutes');
+              } else {
+                  conclusionStatusDisplay.classList.add('status-inconclusive');
+              }
           }
+          localStorage.setItem('conclusionStatus', statusResponse);
 
-          // AI Generates Content for Textareas
-          let prompt = `Based on the following research details and findings: ${baseContext} and the conclusion that the evidence '${statusResponse}' the hypothesis, write a detailed summary of the conclusion.`;
-          conclusionSummaryTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the research context:\n${baseContext}\nAnd the conclusion that the evidence '${statusResponse}' the hypothesis, write a detailed summary of this conclusion. Explain what was found.`;
+          if(conclusionSummary) conclusionSummary.value = await fetchAiData(prompt);
 
-          prompt = `Based on the research context: ${baseContext} and the AI interpretation: "${aiDataInterpretation}", list the key pieces of evidence that '${statusResponse}' the hypothesis.`;
-          evidenceSupportTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the research context:\n${baseContext}\nAnd the AI data interpretation: "${aiDataInterpretation}", list the key pieces of evidence from the experiment and analysis that led to the conclusion status of '${statusResponse}'.`;
+          if(evidenceSupport) evidenceSupport.value = await fetchAiData(prompt);
 
-          prompt = `Based on the research context: ${baseContext}, the methodology employed, and the results obtained, what are the primary limitations and uncertainties of this study?`;
-          limitationsTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the research context:\n${baseContext}\nAnd the overall findings, what are the primary limitations and potential sources of uncertainty in this study?`;
+          if(limitations) limitations.value = await fetchAiData(prompt);
 
-          prompt = `Based on the research context: ${baseContext}, the main conclusion summary: "${conclusionSummaryTextarea.value}", and identified limitations: "${limitationsTextarea.value}", suggest 2-3 specific future research directions.`;
-          futureDirectionsTextarea.value = await generateAiText(prompt);
+          prompt = `Based on the research context, the conclusion that the evidence '${statusResponse}' the hypothesis, and the identified limitations: "${limitations ? limitations.value : 'N/A'}", suggest 2-3 specific and actionable future research directions.`;
+          if(futureDirections) futureDirections.value = await fetchAiData(prompt);
 
-          alert('AI-generated conclusion sections are now populated!');
+          alert('AI-generated conclusion content has been populated from the live API!');
 
         } catch (error) {
-          console.error("Error generating AI conclusion:", error);
-          conclusionSummaryTextarea.value = "Error generating AI conclusion. Please check console.";
-          alert('There was an error generating the AI conclusion. Please try again.');
+          console.error("Error generating AI conclusion content:", error);
+          alert(`There was an error generating AI conclusion content: ${error.message}`);
+          if (conclusionStatusDisplay) {
+              conclusionStatusDisplay.textContent = "Error fetching AI status";
+              conclusionStatusDisplay.className = 'conclusion-status status-refutes';
+          }
+          if(conclusionSummary) conclusionSummary.value = "Error generating AI content.";
+          if(evidenceSupport) evidenceSupport.value = "Error generating AI content.";
+          if(limitations) limitations.value = "Error generating AI content.";
+          if(futureDirections) futureDirections.value = "Error generating AI content.";
         } finally {
           generateConclusionBtn.disabled = false;
           generateConclusionBtn.textContent = 'Generate Complete Conclusion';
@@ -382,11 +410,11 @@
       });
       
       nextStepBtn.addEventListener('click', function() {
-        localStorage.setItem('conclusionSummary', conclusionSummaryTextarea.value);
-        localStorage.setItem('evidenceSupport', evidenceSupportTextarea.value);
-        localStorage.setItem('limitations', limitationsTextarea.value);
-        localStorage.setItem('futureDirections', futureDirectionsTextarea.value);
-        localStorage.setItem('conclusionStatus', conclusionStatusDisplay.textContent);
+        if(conclusionSummary) localStorage.setItem('conclusionSummary', conclusionSummary.value);
+        if(evidenceSupport) localStorage.setItem('evidenceSupport', evidenceSupport.value);
+        if(limitations) localStorage.setItem('limitations', limitations.value);
+        if(futureDirections) localStorage.setItem('futureDirections', futureDirections.value);
+        // conclusionStatus is already saved within the generateConclusionBtn listener
 
         localStorage.setItem('currentStep', 'Peer Reviewer');
         window.location.href = 'peer-reviewer.html';

@@ -295,7 +295,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -384,121 +384,133 @@
 
       // --- AI Generation for Step 5 ---
       const generateStep5AiBtn = document.getElementById('generateStep5Ai');
-      const pythonCodeOutputTextarea = document.getElementById('pythonCodeOutput');
-      const aiGeneratedCodeCardDiv = document.getElementById('aiGeneratedCodeCard');
+      const pythonCodeOutput = document.getElementById('pythonCodeOutput'); // Corrected variable name
+      const aiGeneratedCodeCard = document.getElementById('aiGeneratedCodeCard'); // Corrected variable name
       const dataSourceTypeSelect = document.getElementById('dataSourceType');
       const dataFormatSelect = document.getElementById('dataFormat');
       const dataSourcesDiv = document.getElementById('dataSources');
 
       generateStep5AiBtn.addEventListener('click', async function() {
+        const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+        const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+        const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+        const experimentType = localStorage.getItem('experimentType') || "N/A";
+        const independentVar = localStorage.getItem('independentVar') || "N/A";
+        const dependentVar = localStorage.getItem('dependentVar') || "N/A";
+        const procedure = localStorage.getItem('procedure') || "N/A";
+
+        const baseContext = `
+          Project Title: ${experimentTitle}
+          Research Question: ${researchQuestion}
+          Hypothesis: "${hypothesisStatement}"
+          Experiment Type: ${experimentType}
+          Independent Variable: ${independentVar}
+          Dependent Variable: ${dependentVar}
+          Procedure Summary: ${procedure.substring(0, 200)}...
+        `;
+
         generateStep5AiBtn.disabled = true;
-        generateStep5AiBtn.textContent = 'Generating AI Suggestions...';
+        generateStep5AiBtn.textContent = 'Generating...';
+        if (dataSourcesDiv) dataSourcesDiv.innerHTML = '<p>Loading AI Generated Datasets...</p>';
 
         try {
-          // Retrieve context from localStorage
-          const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
-          const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
-          const researchDomain = localStorage.getItem('researchDomain') || "N/A";
-          const keywords = localStorage.getItem('keywords') || "N/A";
-          const hypothesisType = localStorage.getItem('hypothesisType') || "N/A";
-          const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
-          const independentVar = localStorage.getItem('independentVar') || "N/A";
-          const dependentVar = localStorage.getItem('dependentVar') || "N/A";
-          const procedure = localStorage.getItem('procedure') || "N/A";
+          async function fetchAiData(promptContent) {
+            const response = await fetch('http://localhost:5000/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: promptContent }),
+            });
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+              throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
+            }
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(`AI Error: ${data.error}`);
+            }
+            return data.text || '';
+          }
 
-          const baseContext = `
-            Experiment Title: ${experimentTitle}
-            Research Question: ${researchQuestion}
-            Research Domain: ${researchDomain}
-            Keywords: ${keywords}
-            Hypothesis Type: ${hypothesisType}
-            Hypothesis Statement: "${hypothesisStatement}"
-            Independent Variable: ${independentVar}
-            Dependent Variable: ${dependentVar}
-            Experimental Procedure Summary: ${procedure.substring(0, 200)}...
-          `;
+          let prompt = `Based on the research context:\n${baseContext}\nSuggest a suitable 'Data Source Type' (e.g., Published Research Data, Public Datasets, Simulated Data, Manual Entry). Respond with only the type.`;
+          const genDataSourceType = (await fetchAiData(prompt)).trim();
+          if (genDataSourceType) {
+              let typeSet = false;
+              for (let i = 0; i < dataSourceTypeSelect.options.length; i++) {
+                if (dataSourceTypeSelect.options[i].value.toLowerCase().includes(genDataSourceType.toLowerCase().replace(/\s+/g, ''))) {
+                  dataSourceTypeSelect.selectedIndex = i;
+                  typeSet = true;
+                  break;
+                }
+              }
+              if (!typeSet) console.warn(\`AI generated dataSourceType '${genDataSourceType}' not in dropdown.\`);
+          }
 
-          // Generate dataSourceType
-          let prompt = `Given the research context: ${baseContext}\nSuggest a suitable data source type (e.g., published, public, simulated, manual).`;
-          const genDataSourceType = await generateAiText(prompt);
-          for (let i = 0; i < dataSourceTypeSelect.options.length; i++) {
-            if (dataSourceTypeSelect.options[i].value.toLowerCase() === genDataSourceType.toLowerCase()) {
-              dataSourceTypeSelect.selectedIndex = i;
-              break;
+          prompt = `Based on the research context and suggested source type '${genDataSourceType || 'any'}':\n${baseContext}\nSuggest a 'Data Format' (e.g., CSV, Excel, JSON, API, Manual Entry). Respond with only the format.`;
+          const genDataFormat = (await fetchAiData(prompt)).trim();
+           if (genDataFormat) {
+              let formatSet = false;
+              for (let i = 0; i < dataFormatSelect.options.length; i++) {
+                if (dataFormatSelect.options[i].value.toLowerCase() === genDataFormat.toLowerCase()) {
+                  dataFormatSelect.selectedIndex = i;
+                  formatSet = true;
+                  break;
+                }
+              }
+              if (!formatSet) console.warn(\`AI generated dataFormat '${genDataFormat}' not in dropdown.\`);
+          }
+
+          if (dataSourcesDiv) dataSourcesDiv.innerHTML = '';
+          for (let i = 0; i < 2; i++) {
+            const dsTitlePrompt = `Generate a concise, relevant title for a mock dataset related to this research:\n${baseContext}\nDataset ${i + 1}.`;
+            const dsTitle = await fetchAiData(dsTitlePrompt);
+
+            const dsDescPrompt = `For a mock dataset titled "${dsTitle || 'Untitled Dataset'}", write a brief 1-2 sentence description. Context:\n${baseContext}`;
+            const dsDesc = await fetchAiData(dsDescPrompt);
+
+            const dsTagsPrompt = `Suggest 2-3 comma-separated keywords/tags for a mock dataset titled "${dsTitle || 'Untitled Dataset'}". Context:\n${baseContext}`;
+            const dsTags = await fetchAiData(dsTagsPrompt);
+
+            if (dataSourcesDiv) {
+              const newDsHtml = \`
+                <div class="data-source">
+                  <h5>\${dsTitle || 'AI Generated Dataset Title'}</h5>
+                  <p>\${dsDesc || 'AI generated description.'}</p>
+                  <div class="mb-2">
+                    \${(dsTags || 'Tag1,Tag2').split(',').map(tag => \`<span class="badge">\${tag.trim()}</span>\`).join('')}
+                  </div>
+                  <p class="text-muted small">Source: AI Generated Mock Data | ~1000 mock points</p>
+                  <button class="btn btn-sm btn-outline-primary import-data">Import Dataset</button>
+                </div>\`;
+              dataSourcesDiv.innerHTML += newDsHtml;
             }
           }
 
-          // Generate dataFormat
-          prompt = `Given the research context: ${baseContext}\nAnd data source type "${genDataSourceType}", suggest a data format (e.g., csv, excel, json, api, manual).`;
-          const genDataFormat = await generateAiText(prompt);
-          for (let i = 0; i < dataFormatSelect.options.length; i++) {
-            if (dataFormatSelect.options[i].value.toLowerCase() === genDataFormat.toLowerCase()) {
-              dataFormatSelect.selectedIndex = i;
-              break;
-            }
-          }
+          const pythonPrompt = \`Based on the complete research design:
+          Title: \${experimentTitle}
+          Research Question: \${researchQuestion}
+          Hypothesis: "\${hypothesisStatement}"
+          Experiment Type: \${experimentType}
+          Independent Variable: \${independentVar}
+          Dependent Variable: \${dependentVar}
+          Procedure: \${procedure}
+          Generate a simple Python script (using only common libraries like numpy, if necessary, avoid obscure ones) to simulate this experiment. The script should print some results or a summary statement. Ensure the code is self-contained.\`;
 
-          // Generate Mock "Available Datasets"
-          dataSourcesDiv.innerHTML = ''; // Clear existing mock datasets
-          for (let i = 0; i < 2; i++) { // Generate 2 mock datasets
-            const dsTitlePrompt = `Based on the research context: ${baseContext}\nSuggest a title for a relevant mock dataset #${i + 1}.`;
-            const dsTitle = await generateAiText(dsTitlePrompt);
-
-            const dsDescPrompt = `For a mock dataset titled "${dsTitle}" in the context of "${experimentTitle}", write a brief description.`;
-            const dsDesc = await generateAiText(dsDescPrompt);
-
-            const dsTagsPrompt = `Suggest 2-3 relevant keywords/tags (comma-separated) for a mock dataset titled "${dsTitle}".`;
-            const dsTagsResponse = await generateAiText(dsTagsPrompt);
-            const dsTags = dsTagsResponse.split(',').map(tag => `<span class="badge bg-secondary me-1">${tag.trim()}</span>`).join('');
-
-            const newDsHtml = `
-              <div class="data-source">
-                <h5>${dsTitle}</h5>
-                <p>${dsDesc}</p>
-                <div class="mb-2">${dsTags}</div>
-                <p class="text-muted small">Source: AI Generated Mock Data | ~1000 mock points</p>
-                <button class="btn btn-sm btn-outline-primary import-data">Import Dataset</button>
-              </div>`;
-            dataSourcesDiv.innerHTML += newDsHtml;
-          }
-          // Re-attach event listeners if import functionality is critical (simplified for this task)
-          // For now, the existing import logic will only apply to pre-existing buttons if not re-run.
-
-          // Generate Python Simulation Code
-          const pythonPrompt = `
-            Based on the complete research design:
-            ${baseContext}
-            Independent Variable: ${independentVar}
-            Dependent Variable: ${dependentVar}
-            Experimental Procedure Summary: ${procedure}
-
-            Generate a simple Python script to simulate this experiment.
-            The script should:
-            - Be self-contained.
-            - Use common libraries like numpy or pandas if necessary (avoid obscure ones).
-            - Simulate the core logic and relationship between independent and dependent variables.
-            - Print some example results or a summary.
-            - Include comments to explain the simulation.
-            This is for the "python code for experiment" part of the AI.
-          `;
-          const generatedPythonCode = await generateAiText(pythonPrompt);
-          pythonCodeOutputTextarea.value = generatedPythonCode;
-          aiGeneratedCodeCardDiv.style.display = 'block'; // Show the card
-
-          // Store Python Code in localStorage
+          const generatedPythonCode = await fetchAiData(pythonPrompt);
+          if (pythonCodeOutput) pythonCodeOutput.value = generatedPythonCode;
+          if (aiGeneratedCodeCard) aiGeneratedCodeCard.style.display = 'block';
           localStorage.setItem('generatedPythonCode', generatedPythonCode);
 
-          alert('AI suggestions for Data Gatherer fields and Python simulation code have been generated!');
+          alert('AI suggestions for Step 5 have been generated from the live API!');
 
         } catch (error) {
           console.error("Error generating AI suggestions for Step 5:", error);
-          alert('There was an error generating AI suggestions. Please try again.');
+          alert(\`There was an error generating AI suggestions for Step 5: \${error.message}\`);
+          if (dataSourcesDiv) dataSourcesDiv.innerHTML = '<p class="text-danger">Error loading AI datasets.</p>';
         } finally {
           generateStep5AiBtn.disabled = false;
           generateStep5AiBtn.textContent = 'Generate AI Suggestions for This Step';
         }
       });
-
     });
   </script>
 </body>
