@@ -220,50 +220,47 @@
               <div class="review-score">
                 <span class="score-label">Scientific Merit:</span>
                 <div class="score-bar">
-                  <div class="score-fill" style="width: 85%"></div>
+                  <div class="score-fill" id="fillScientificMerit" style="width: 0%"></div>
                 </div>
-                <span class="score-value">8.5/10</span>
+                <span class="score-value" id="scoreScientificMerit">0/10</span>
               </div>
               <div class="review-score">
                 <span class="score-label">Methodology:</span>
                 <div class="score-bar">
-                  <div class="score-fill" style="width: 90%"></div>
+                  <div class="score-fill" id="fillMethodology" style="width: 0%"></div>
                 </div>
-                <span class="score-value">9.0/10</span>
+                <span class="score-value" id="scoreMethodology">0/10</span>
               </div>
               <div class="review-score">
                 <span class="score-label">Data Analysis:</span>
                 <div class="score-bar">
-                  <div class="score-fill" style="width: 80%"></div>
+                  <div class="score-fill" id="fillDataAnalysis" style="width: 0%"></div>
                 </div>
-                <span class="score-value">8.0/10</span>
+                <span class="score-value" id="scoreDataAnalysis">0/10</span>
               </div>
               <div class="review-score">
                 <span class="score-label">Conclusion Validity:</span>
                 <div class="score-bar">
-                  <div class="score-fill" style="width: 85%"></div>
+                  <div class="score-fill" id="fillConclusionValidity" style="width: 0%"></div>
                 </div>
-                <span class="score-value">8.5/10</span>
+                <span class="score-value" id="scoreConclusionValidity">0/10</span>
               </div>
             </div>
             
             <div class="review-comment">
               <h6>Strengths</h6>
-              <p>The experiment is well-designed with a clear hypothesis that is testable and specific. The methodology is appropriate for investigating the relationship between temperature and reaction rate. The data analysis is thorough, with good use of the Arrhenius equation to model the relationship. The conclusion is well-supported by the experimental results.</p>
+              <p id="reviewStrengthsP">AI-generated strengths will appear here.</p>
             </div>
             
             <div class="review-comment">
               <h6>Areas for Improvement</h6>
-              <p>The temperature range could be expanded to test the limits of the Arrhenius relationship. Additional control variables could be considered to strengthen the experimental design. The statistical analysis could benefit from more rigorous uncertainty quantification. The discussion of limitations could be more comprehensive.</p>
+              <p id="reviewImprovementP">AI-generated areas for improvement will appear here.</p>
             </div>
             
             <div class="review-comment">
               <h6>Specific Recommendations</h6>
-              <ol>
-                <li>Consider including error bars in your data visualization to represent experimental uncertainty.</li>
-                <li>Expand the discussion of how your results compare to previous studies in the literature.</li>
-                <li>Provide more detail on the potential applications of your findings.</li>
-                <li>Consider additional statistical tests to further validate your conclusions.</li>
+              <ol id="reviewRecommendationsList">
+                <li>AI-generated recommendations will appear here.</li>
               </ol>
             </div>
             
@@ -316,7 +313,7 @@
                 <li>Include additional statistical validation</li>
               </ul>
             </div>
-            <button type="button" class="btn btn-outline-primary w-100 mt-3" id="generateResponseBtn">Generate Complete Response</button>
+            <button type="button" class="btn btn-outline-primary w-100 mt-3" id="generateAiReviewBtn">Generate AI Peer Review & Draft Response</button>
           </div>
         </div>
       </div>
@@ -324,6 +321,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -347,24 +345,127 @@
         window.location.href = '../login.html';
       });
       
-      // Handle generate response button
-      document.getElementById('generateResponseBtn').addEventListener('click', function() {
-        // In a real app, this would call the LLM API
-        alert('AI would generate a complete response to the reviewer based on your experiment.');
-        
-        // For demo purposes, fill in some sample data
-        document.getElementById('reviewResponse').value = 'Thank you for your thoughtful and constructive review of our research. We appreciate your recognition of the strengths in our experimental design, methodology, and data analysis. Your feedback provides valuable insights that will help us improve the quality and rigor of our work.\n\nWe agree that expanding the temperature range would provide a more comprehensive test of the Arrhenius relationship, particularly at temperature extremes where deviations might occur. We also acknowledge the need for more rigorous uncertainty quantification and a more comprehensive discussion of limitations.';
-        
-        document.getElementById('plannedRevisions').value = '1. We will add error bars to all data visualizations to represent experimental uncertainty.\n2. We will expand our discussion to include comparisons with three recent studies on similar reaction systems.\n3. We will add a new section discussing potential applications in industrial catalysis and biochemical processes.\n4. We will perform additional statistical analysis, including residual analysis and confidence intervals for the Arrhenius parameters.';
+      const scoreScientificMeritEl = document.getElementById('scoreScientificMerit');
+      const fillScientificMeritEl = document.getElementById('fillScientificMerit');
+      const scoreMethodologyEl = document.getElementById('scoreMethodology');
+      const fillMethodologyEl = document.getElementById('fillMethodology');
+      const scoreDataAnalysisEl = document.getElementById('scoreDataAnalysis');
+      const fillDataAnalysisEl = document.getElementById('fillDataAnalysis');
+      const scoreConclusionValidityEl = document.getElementById('scoreConclusionValidity');
+      const fillConclusionValidityEl = document.getElementById('fillConclusionValidity');
+
+      const reviewStrengthsPEl = document.getElementById('reviewStrengthsP');
+      const reviewImprovementPEl = document.getElementById('reviewImprovementP');
+      const reviewRecommendationsListEl = document.getElementById('reviewRecommendationsList');
+
+      const reviewResponseTextarea = document.getElementById('reviewResponse');
+      const plannedRevisionsTextarea = document.getElementById('plannedRevisions');
+      const generateAiReviewBtn = document.getElementById('generateAiReviewBtn');
+      const nextStepBtn = document.getElementById('nextStepBtn');
+
+
+      generateAiReviewBtn.addEventListener('click', async function() {
+        generateAiReviewBtn.disabled = true;
+        generateAiReviewBtn.textContent = 'Generating AI Review...';
+
+        // Clear previous content
+        reviewStrengthsPEl.textContent = "Generating...";
+        reviewImprovementPEl.textContent = "Generating...";
+        reviewRecommendationsListEl.innerHTML = '<li>Generating...</li>';
+        reviewResponseTextarea.value = "Generating...";
+        plannedRevisionsTextarea.value = "Generating...";
+        ['ScientificMerit', 'Methodology', 'DataAnalysis', 'ConclusionValidity'].forEach(s => {
+            document.getElementById(`score${s}`).textContent = `...`;
+            document.getElementById(`fill${s}`).style.width = `0%`;
+        });
+
+        try {
+          const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+          const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+          const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+          const methodologySummary = `Type: ${localStorage.getItem('experimentType')}, IV: ${localStorage.getItem('independentVar')}, DV: ${localStorage.getItem('dependentVar')}`; // Simplified
+          const aiDataInterpretation = localStorage.getItem('aiDataInterpretation') || "N/A";
+          const conclusionSummary = localStorage.getItem('conclusionSummary') || "N/A";
+          const limitations = localStorage.getItem('limitations') || "N/A";
+          const futureDirections = localStorage.getItem('futureDirections') || "N/A";
+
+          const baseContext = `
+            Research Title: ${experimentTitle}
+            Research Question: ${researchQuestion}
+            Hypothesis: ${hypothesisStatement}
+            Methodology Summary: ${methodologySummary}
+            AI Data Interpretation: ${aiDataInterpretation}
+            Conclusion Summary: ${conclusionSummary}
+            Identified Limitations: ${limitations}
+            Proposed Future Directions: ${futureDirections}
+          `;
+
+          let aiGeneratedScores = {};
+          const aspects = ['ScientificMerit', 'Methodology', 'DataAnalysis', 'ConclusionValidity'];
+          for (const aspect of aspects) {
+            const prompt = `Critically assess the ${aspect.replace(/([A-Z])/g, ' $1').trim()} of a study with context: ${baseContext}. Respond with a score out of 10 (e.g., '8.5').`;
+            const scoreText = await generateAiText(prompt);
+            const score = parseFloat(scoreText) || 0;
+            aiGeneratedScores[aspect] = score;
+            document.getElementById(`score${aspect}`).textContent = `${score}/10`;
+            document.getElementById(`fill${aspect}`).style.width = `${score * 10}%`;
+          }
+
+          const strengthsPrompt = `Based on the study context: ${baseContext}, identify 2-3 key strengths of this research. Present as a paragraph.`;
+          const strengthsText = await generateAiText(strengthsPrompt);
+          reviewStrengthsPEl.textContent = strengthsText;
+
+          const improvementPrompt = `Based on the study context: ${baseContext}, identify 2-3 key areas for improvement. Present as a paragraph.`;
+          const improvementText = await generateAiText(improvementPrompt);
+          reviewImprovementPEl.textContent = improvementText;
+
+          const recommendationsPrompt = `Based on the study context: ${baseContext}, list 3-4 specific, actionable recommendations as bullet points (use '*' for bullets, each on a new line).`;
+          const recommendationsText = await generateAiText(recommendationsPrompt);
+          reviewRecommendationsListEl.innerHTML = ''; // Clear loading/previous
+          recommendationsText.split('*').forEach(rec => {
+            if (rec.trim()) {
+              const li = document.createElement('li');
+              li.textContent = rec.trim();
+              reviewRecommendationsListEl.appendChild(li);
+            }
+          });
+
+          const generatedReviewSummary = `Strengths: ${strengthsText}\nAreas for Improvement: ${improvementText}\nRecommendations:\n${recommendationsText}`;
+
+          const responseDraftPrompt = `Given this AI-generated peer review: ${generatedReviewSummary}\n\nDraft a polite and constructive response from the researcher to this review.`;
+          reviewResponseTextarea.value = await generateAiText(responseDraftPrompt);
+
+          const revisionsPlanPrompt = `Based on this AI-generated peer review: ${generatedReviewSummary}\n\nList specific revisions the researcher plans to make.`;
+          plannedRevisionsTextarea.value = await generateAiText(revisionsPlanPrompt);
+
+          localStorage.setItem('aiPeerReviewData', JSON.stringify({
+            scores: aiGeneratedScores,
+            strengths: strengthsText,
+            improvements: improvementText,
+            recommendations: recommendationsText
+          }));
+
+          alert('AI Peer Review and Draft Response have been generated!');
+
+        } catch (error) {
+          console.error("Error generating AI Peer Review:", error);
+          alert('An error occurred while generating the AI review. Please check the console.');
+          reviewStrengthsPEl.textContent = "Error loading review.";
+          reviewImprovementPEl.textContent = "Error loading review.";
+          reviewRecommendationsListEl.innerHTML = '<li>Error loading recommendations.</li>';
+        } finally {
+          generateAiReviewBtn.disabled = false;
+          generateAiReviewBtn.textContent = 'Generate AI Peer Review & Draft Response';
+        }
       });
       
-      // Handle previous step button
       document.getElementById('prevStepBtn').addEventListener('click', function() {
         window.location.href = 'conclusion-drawer.html';
       });
       
-      // Handle next step button
-      document.getElementById('nextStepBtn').addEventListener('click', function() {
+      nextStepBtn.addEventListener('click', function() {
+        localStorage.setItem('researcherResponseToReview', reviewResponseTextarea.value);
+        localStorage.setItem('plannedRevisionsBasedOnReview', plannedRevisionsTextarea.value);
         localStorage.setItem('currentStep', 'Published');
         window.location.href = 'publication-exporter.html';
       });

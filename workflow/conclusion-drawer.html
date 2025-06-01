@@ -199,11 +199,11 @@
           <div class="card-body">
             <div class="mb-4">
               <h6>Hypothesis Statement:</h6>
-              <p class="border p-3 rounded bg-light">If the temperature of the reaction environment increases from 10°C to 50°C, then the rate of the chemical reaction will increase according to the Arrhenius equation, with approximately a doubling of rate for each 10°C increase.</p>
+              <p class="border p-3 rounded bg-light" id="hypothesisDisplay">Loading hypothesis...</p>
             </div>
             <div class="mb-4">
               <h6>Conclusion Status:</h6>
-              <div class="conclusion-status status-supports">Supports Hypothesis</div>
+              <div class="conclusion-status status-inconclusive" id="conclusionStatusDisplay">Pending AI Analysis</div>
             </div>
             <form id="conclusionForm">
               <div class="mb-3">
@@ -269,6 +269,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -292,28 +293,101 @@
         window.location.href = '../login.html';
       });
       
-      // Handle generate conclusion button
-      document.getElementById('generateConclusionBtn').addEventListener('click', function() {
-        // In a real app, this would call the LLM API
-        alert('AI would generate a complete conclusion based on your experiment results.');
-        
-        // For demo purposes, fill in some sample data
-        document.getElementById('conclusionSummary').value = 'The experimental results strongly support the hypothesis that reaction rates increase with temperature according to the Arrhenius equation. The data showed a clear exponential relationship between temperature and reaction rate, with rates approximately doubling for each 10°C increase in temperature. The fitted Arrhenius parameters (A = 1.198e+09, Ea = 45187.3 J/mol) closely match theoretical expectations, and the high R² value of 0.9982 indicates that the model explains nearly all of the variance in the observed data.';
-        
-        document.getElementById('evidenceSupport').value = '1. The reaction rates increased exponentially with temperature as predicted.\n2. The R² value of 0.9982 indicates an excellent fit to the Arrhenius model.\n3. The calculated activation energy (45.2 kJ/mol) is consistent with typical values for this type of reaction.\n4. The data points show a clear trend with minimal scatter.';
-        
-        document.getElementById('limitations').value = '1. The experiment was conducted over a limited temperature range (10-50°C).\n2. Only one type of reaction was studied.\n3. The experiment was performed under controlled laboratory conditions that may not reflect real-world scenarios.\n4. The sample size was relatively small (5 temperature points).';
-        
-        document.getElementById('futureDirections').value = '1. Expand the temperature range to test the limits of the Arrhenius relationship.\n2. Study different types of reactions to determine if the relationship holds across various chemical systems.\n3. Investigate the effect of catalysts on the temperature-rate relationship.\n4. Develop mathematical models that account for additional variables beyond temperature.';
+      const hypothesisDisplay = document.getElementById('hypothesisDisplay');
+      const conclusionStatusDisplay = document.getElementById('conclusionStatusDisplay');
+      const generateConclusionBtn = document.getElementById('generateConclusionBtn');
+      const conclusionSummaryTextarea = document.getElementById('conclusionSummary');
+      const evidenceSupportTextarea = document.getElementById('evidenceSupport');
+      const limitationsTextarea = document.getElementById('limitations');
+      const futureDirectionsTextarea = document.getElementById('futureDirections');
+      const nextStepBtn = document.getElementById('nextStepBtn');
+
+      // Load hypothesis statement
+      hypothesisDisplay.textContent = localStorage.getItem('hypothesisStatement') || 'Hypothesis statement not found.';
+
+      generateConclusionBtn.addEventListener('click', async function() {
+        generateConclusionBtn.disabled = true;
+        generateConclusionBtn.textContent = 'Generating Conclusion...';
+        conclusionSummaryTextarea.value = "AI is thinking...";
+        evidenceSupportTextarea.value = "AI is thinking...";
+        limitationsTextarea.value = "AI is thinking...";
+        futureDirectionsTextarea.value = "AI is thinking...";
+        conclusionStatusDisplay.textContent = 'Analyzing...';
+        conclusionStatusDisplay.className = 'conclusion-status status-inconclusive';
+
+
+        try {
+          // Retrieve context from localStorage
+          const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+          const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+          const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+          const experimentRunOutput = localStorage.getItem('experimentRunOutput');
+          const experimentRunError = localStorage.getItem('experimentRunError');
+          const aiDataInterpretation = localStorage.getItem('aiDataInterpretation') || "No AI interpretation from previous step.";
+
+          let experimentOutcomeContext = "Experiment outcome: Not clearly defined from previous step.";
+          if (experimentRunOutput) {
+            experimentOutcomeContext = `Experiment Result: ${experimentRunOutput}`;
+          } else if (experimentRunError) {
+            experimentOutcomeContext = `Experiment Error: ${experimentRunError}`;
+          }
+
+          const baseContext = `
+            Research Project: "${experimentTitle}"
+            Research Question: "${researchQuestion}"
+            Hypothesis: "${hypothesisStatement}"
+            ${experimentOutcomeContext}
+            AI Data Interpretation from Previous Step: "${aiDataInterpretation}"
+          `;
+
+          // AI Determines Conclusion Status
+          const statusPrompt = `Based on the hypothesis: '${hypothesisStatement}' and the data interpretation: '${aiDataInterpretation}', does the evidence support, refute, or is it inconclusive regarding the hypothesis? Respond with 'Supports Hypothesis', 'Refutes Hypothesis', or 'Inconclusive'.`;
+          const statusResponse = await generateAiText(statusPrompt);
+          conclusionStatusDisplay.textContent = statusResponse;
+          if (statusResponse.toLowerCase().includes('supports')) {
+            conclusionStatusDisplay.className = 'conclusion-status status-supports';
+          } else if (statusResponse.toLowerCase().includes('refutes')) {
+            conclusionStatusDisplay.className = 'conclusion-status status-refutes';
+          } else {
+            conclusionStatusDisplay.className = 'conclusion-status status-inconclusive';
+          }
+
+          // AI Generates Content for Textareas
+          let prompt = `Based on the following research details and findings: ${baseContext} and the conclusion that the evidence '${statusResponse}' the hypothesis, write a detailed summary of the conclusion.`;
+          conclusionSummaryTextarea.value = await generateAiText(prompt);
+
+          prompt = `Based on the research context: ${baseContext} and the AI interpretation: "${aiDataInterpretation}", list the key pieces of evidence that '${statusResponse}' the hypothesis.`;
+          evidenceSupportTextarea.value = await generateAiText(prompt);
+
+          prompt = `Based on the research context: ${baseContext}, the methodology employed, and the results obtained, what are the primary limitations and uncertainties of this study?`;
+          limitationsTextarea.value = await generateAiText(prompt);
+
+          prompt = `Based on the research context: ${baseContext}, the main conclusion summary: "${conclusionSummaryTextarea.value}", and identified limitations: "${limitationsTextarea.value}", suggest 2-3 specific future research directions.`;
+          futureDirectionsTextarea.value = await generateAiText(prompt);
+
+          alert('AI-generated conclusion sections are now populated!');
+
+        } catch (error) {
+          console.error("Error generating AI conclusion:", error);
+          conclusionSummaryTextarea.value = "Error generating AI conclusion. Please check console.";
+          alert('There was an error generating the AI conclusion. Please try again.');
+        } finally {
+          generateConclusionBtn.disabled = false;
+          generateConclusionBtn.textContent = 'Generate Complete Conclusion';
+        }
       });
       
-      // Handle previous step button
       document.getElementById('prevStepBtn').addEventListener('click', function() {
         window.location.href = 'data-analyzer.html';
       });
       
-      // Handle next step button
-      document.getElementById('nextStepBtn').addEventListener('click', function() {
+      nextStepBtn.addEventListener('click', function() {
+        localStorage.setItem('conclusionSummary', conclusionSummaryTextarea.value);
+        localStorage.setItem('evidenceSupport', evidenceSupportTextarea.value);
+        localStorage.setItem('limitations', limitationsTextarea.value);
+        localStorage.setItem('futureDirections', futureDirectionsTextarea.value);
+        localStorage.setItem('conclusionStatus', conclusionStatusDisplay.textContent);
+
         localStorage.setItem('currentStep', 'Peer Reviewer');
         window.location.href = 'peer-reviewer.html';
       });

@@ -233,38 +233,47 @@
           </div>
           <div class="card-body">
             <div class="paper-preview">
-              <div class="paper-title">Effect of Temperature on Reaction Rates: An Experimental Study</div>
+              <div class="paper-title" id="displayPaperTitle">Paper Title Will Appear Here</div>
               <div class="paper-authors">Author: <span id="paperAuthor"></span></div>
               
               <div class="paper-abstract">
-                <strong>Abstract:</strong> This study investigates the relationship between temperature and reaction rate in a controlled chemical system. Using the Arrhenius equation as a theoretical framework, we conducted experiments across a temperature range of 10-50°C. Our results demonstrate a clear exponential relationship between temperature and reaction rate, with an activation energy of 45.2 kJ/mol and a pre-exponential factor of 1.2 × 10⁹. These findings support the hypothesis that reaction rates approximately double for each 10°C increase in temperature within the studied range. The high R² value of 0.9982 indicates an excellent fit to the Arrhenius model, validating its applicability for predicting reaction kinetics in similar systems.
+                <strong>Abstract:</strong>
+                <p id="displayPaperAbstract">Abstract will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayIntroductionSection">
                 <h3>1. Introduction</h3>
-                <p>Temperature is one of the most critical factors affecting the rate of chemical reactions. The relationship between temperature and reaction rate has been extensively studied and is commonly described by the Arrhenius equation. This equation provides a mathematical model that relates the rate constant of a chemical reaction to the absolute temperature, activation energy, and pre-exponential factor.</p>
-                <p>In this study, we aim to experimentally verify the Arrhenius relationship and quantify the effect of temperature on reaction rates in a controlled system. Our hypothesis predicts that reaction rates will increase exponentially with temperature, approximately doubling for each 10°C increase.</p>
+                <p>Introduction will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayMethodologySection">
                 <h3>2. Methodology</h3>
-                <p>We conducted a controlled experiment using a model reaction system across five temperature points (10°C, 20°C, 30°C, 40°C, and 50°C). All other variables, including reactant concentration, pressure, and catalyst presence, were held constant. Reaction rates were measured using spectrophotometry, with six replicate measurements at each temperature to ensure statistical validity.</p>
+                <p>Methodology will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayResultsSection">
                 <h3>3. Results</h3>
-                <p>The experimental data showed a clear exponential relationship between temperature and reaction rate. The measured rates increased from 0.0015 mol/L/s at 10°C to 0.0295 mol/L/s at 50°C. Fitting the data to the Arrhenius equation yielded an activation energy of 45.2 kJ/mol and a pre-exponential factor of 1.2 × 10⁹, with an R² value of 0.9982.</p>
+                <p>Results will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayDiscussionSection">
                 <h3>4. Discussion</h3>
-                <p>Our results strongly support the hypothesis that reaction rates increase exponentially with temperature according to the Arrhenius equation. The high R² value indicates that the model explains nearly all of the variance in the observed data. The calculated activation energy is consistent with typical values for this type of reaction.</p>
-                <p>Limitations of this study include the relatively narrow temperature range and the focus on a single reaction type. Future research should expand the temperature range and investigate different chemical systems to test the broader applicability of these findings.</p>
+                <p>Discussion will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayConclusionSection">
                 <h3>5. Conclusion</h3>
-                <p>This study confirms that temperature has a significant and predictable effect on reaction rates, following the Arrhenius equation. The experimental results provide quantitative parameters that can be used to predict reaction rates at different temperatures within the studied range. These findings have implications for optimizing reaction conditions in various chemical processes and understanding temperature-dependent phenomena in natural systems.</p>
+                <p>Conclusion will be generated here...</p>
+              </div>
+
+              <div class="paper-section" id="displayReferencesSection">
+                <h3>6. References</h3>
+                <p>References will be generated here...</p>
+              </div>
+
+              <div class="paper-section" id="displayAppendixSection">
+                <h3>7. Appendix</h3>
+                <p>Appendix content will be generated here...</p>
               </div>
             </div>
             <div class="d-flex justify-content-between mt-4">
@@ -308,6 +317,7 @@
                 <p>For academic journal submissions</p>
               </div>
             </div>
+            <button type="button" class="btn btn-success w-100 mb-3" id="generateFullPaperBtn">Generate Full Paper with AI</button>
             <button type="button" class="btn btn-primary w-100 mt-3" id="exportBtn">Export Paper</button>
             
             <div class="mt-4">
@@ -328,6 +338,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../Hyperion/ai-service.js"></script> <!-- Added AI service script -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -340,9 +351,38 @@
         return;
       }
       
-      // Display user email
-      document.getElementById('userEmail').textContent = userEmail;
-      document.getElementById('paperAuthor').textContent = userEmail;
+      // Display user email and load initial fields
+      const userEmailEl = document.getElementById('userEmail');
+      const paperAuthorEl = document.getElementById('paperAuthor');
+      const paperTitleInput = document.getElementById('paperTitle');
+      const paperKeywordsInput = document.getElementById('paperKeywords');
+      const displayPaperTitleEl = document.getElementById('displayPaperTitle');
+
+      if (userEmailEl) userEmailEl.textContent = userEmail;
+      if (paperAuthorEl) paperAuthorEl.textContent = userEmail;
+
+      const storedTitle = localStorage.getItem('experimentTitle') || 'Default Paper Title';
+      paperTitleInput.value = storedTitle;
+      displayPaperTitleEl.textContent = storedTitle;
+      paperKeywordsInput.value = localStorage.getItem('keywords') || 'keyword1, keyword2';
+
+      // Clear static content / set placeholders for AI content
+      const sectionIds = ['displayPaperAbstract', 'displayIntroductionSection', 'displayMethodologySection', 'displayResultsSection', 'displayDiscussionSection', 'displayConclusionSection', 'displayReferencesSection', 'displayAppendixSection'];
+      sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (id === 'displayPaperAbstract') { // This is a <p> inside a div with strong tag
+             el.textContent = 'Abstract will be generated by AI...';
+          } else { // These are divs that contain h3 and p
+            const h3 = el.querySelector('h3');
+            el.innerHTML = ''; // Clear all children
+            if(h3) el.appendChild(h3); // Add back the h3
+            const p = document.createElement('p');
+            p.textContent = `${h3 ? h3.textContent.split('.')[1].trim() : 'Content'} will be generated by AI...`;
+            el.appendChild(p);
+          }
+        }
+      });
       
       // Handle logout
       document.getElementById('logoutBtn').addEventListener('click', function(e) {
@@ -380,11 +420,124 @@
       
       // Handle finish button
       document.getElementById('finishBtn').addEventListener('click', function() {
-        // Mark experiment as completed
+        localStorage.setItem('paperTitleFinal', paperTitleInput.value);
+        localStorage.setItem('paperKeywordsFinal', paperKeywordsInput.value);
+        // Potentially save the full generated paper text to localStorage if needed later, though it's large
+        // localStorage.setItem('fullGeneratedPaperText', document.querySelector('.paper-preview').innerText);
         localStorage.setItem('experimentCompleted', 'true');
-        // Navigate back to dashboard
         window.location.href = '../dashboard.html';
       });
+
+      const generateFullPaperBtn = document.getElementById('generateFullPaperBtn');
+
+      generateFullPaperBtn.addEventListener('click', async function() {
+        generateFullPaperBtn.disabled = true;
+        generateFullPaperBtn.textContent = 'Generating Full Paper... Please Wait';
+
+        try {
+          const fullContext = {
+            experimentTitle: localStorage.getItem('experimentTitle') || "N/A",
+            researchQuestion: localStorage.getItem('researchQuestion') || "N/A",
+            keywords: localStorage.getItem('keywords') || "N/A",
+            hypothesisStatement: localStorage.getItem('hypothesisStatement') || "N/A",
+            experimentType: localStorage.getItem('experimentType') || "N/A",
+            independentVar: localStorage.getItem('independentVar') || "N/A",
+            dependentVar: localStorage.getItem('dependentVar') || "N/A",
+            controlVar1: localStorage.getItem('controlVar1') || "N/A",
+            controlVar2: localStorage.getItem('controlVar2') || "N/A",
+            sampleSize: localStorage.getItem('sampleSize') || "N/A",
+            procedure: localStorage.getItem('procedure') || "N/A",
+            materials: localStorage.getItem('materials') || "N/A",
+            dataCollection: localStorage.getItem('dataCollection') || "N/A",
+            actualGeneratedPythonCode: localStorage.getItem('actualGeneratedPythonCode') || "N/A",
+            experimentRunOutput: localStorage.getItem('experimentRunOutput'),
+            experimentRunError: localStorage.getItem('experimentRunError'),
+            selectedChartType: localStorage.getItem('selectedChartType') || "N/A",
+            selectedStatisticalTest: localStorage.getItem('selectedStatisticalTest') || "N/A",
+            aiDataInterpretation: localStorage.getItem('aiDataInterpretation') || "N/A",
+            conclusionSummary: localStorage.getItem('conclusionSummary') || "N/A",
+            evidenceSupport: localStorage.getItem('evidenceSupport') || "N/A",
+            limitations: localStorage.getItem('limitations') || "N/A",
+            futureDirections: localStorage.getItem('futureDirections') || "N/A",
+            conclusionStatus: localStorage.getItem('conclusionStatus') || "N/A",
+            aiPeerReviewData: JSON.parse(localStorage.getItem('aiPeerReviewData') || '{}'),
+            researcherResponseToReview: localStorage.getItem('researcherResponseToReview') || "N/A",
+            researchDomain: localStorage.getItem('researchDomain') || "N/A", // Added for references
+          };
+
+          displayPaperTitleEl.textContent = fullContext.experimentTitle; // Update title display
+
+          // Helper to set content, preserving header if exists
+          const setSectionContent = (elementId, headerText, content) => {
+            const el = document.getElementById(elementId);
+            if(el){
+              el.innerHTML = ''; // Clear previous
+              if(headerText){
+                const h3 = document.createElement('h3');
+                h3.textContent = headerText;
+                el.appendChild(h3);
+              }
+              // Handle multiline content by splitting and appending paragraphs or use pre-wrap
+              content.split('\n').forEach(line => {
+                if(line.trim() !== ""){
+                  const p = document.createElement('p');
+                  p.textContent = line.trim();
+                  el.appendChild(p);
+                }
+              });
+               if (elementId === 'displayPaperAbstract') { // Special handling for abstract structure
+                 el.innerHTML = `<strong>Abstract:</strong><p>${content}</p>`;
+               }
+            }
+          };
+
+          let prompt;
+
+          prompt = `Write a concise abstract (approx. 200-250 words) for a research paper titled "${fullContext.experimentTitle}". Key details: Research Question: "${fullContext.researchQuestion}". Hypothesis: "${fullContext.hypothesisStatement}". Methodology: ${fullContext.experimentType} using ${fullContext.independentVar} and ${fullContext.dependentVar}. Key Result: ${fullContext.experimentRunOutput || fullContext.experimentRunError}. Main Conclusion: ${fullContext.conclusionSummary}.`;
+          setSectionContent('displayPaperAbstract', null, await generateAiText(prompt));
+
+          prompt = `Write the Introduction section for the research paper "${fullContext.experimentTitle}". It should cover the background related to "${fullContext.researchQuestion}", clearly state the research question, and present the hypothesis: "${fullContext.hypothesisStatement}". Briefly mention the significance of the study using keywords: ${fullContext.keywords}.`;
+          setSectionContent('displayIntroductionSection', '1. Introduction', await generateAiText(prompt));
+
+          prompt = `Describe the Methodology section for the paper "${fullContext.experimentTitle}". Detail the experiment type: ${fullContext.experimentType}. Independent variable: ${fullContext.independentVar}. Dependent variable: ${fullContext.dependentVar}. Control variables: ${fullContext.controlVar1}, ${fullContext.controlVar2}. Sample size/trials: ${fullContext.sampleSize}. Experimental procedure: "${fullContext.procedure}". Materials/equipment: "${fullContext.materials}". Data collection method: "${fullContext.dataCollection}". Mention that Python code was used: snippet for context: ${fullContext.actualGeneratedPythonCode.substring(0,100)}...`;
+          setSectionContent('displayMethodologySection', '2. Methodology', await generateAiText(prompt));
+
+          prompt = `Present the key Results section for the paper "${fullContext.experimentTitle}". Focus on the outcome: ${fullContext.experimentRunOutput || fullContext.experimentRunError}. Refer to the AI data interpretation: "${fullContext.aiDataInterpretation}". Mention chart type used: ${fullContext.selectedChartType} and statistical test: ${fullContext.selectedStatisticalTest}.`;
+          setSectionContent('displayResultsSection', '3. Results', await generateAiText(prompt));
+
+          prompt = `Write the Discussion section for the paper "${fullContext.experimentTitle}". Discuss the findings in relation to the hypothesis ("${fullContext.hypothesisStatement}" - which was ${fullContext.conclusionStatus}). Address the limitations identified: "${fullContext.limitations}". Compare with general scientific expectations if possible.`;
+          setSectionContent('displayDiscussionSection', '4. Discussion', await generateAiText(prompt));
+
+          prompt = `Write the overall Conclusion section for the paper "${fullContext.experimentTitle}", based on the summary: "${fullContext.conclusionSummary}". Reiterate key evidence: "${fullContext.evidenceSupport}". Briefly state future directions: "${fullContext.futureDirections}".`;
+          setSectionContent('displayConclusionSection', '5. Conclusion', await generateAiText(prompt));
+
+          prompt = `Provide a list of 2-3 mock academic references relevant to a study on "${fullContext.researchDomain}" and keywords "${fullContext.keywords}". Each reference on a new line.`;
+          const referencesText = await generateAiText(prompt);
+          const referencesEl = document.getElementById('displayReferencesSection');
+          referencesEl.innerHTML = '<h3>6. References</h3>';
+          referencesText.split('\n').forEach(ref => {
+            if(ref.trim()){
+              const p = document.createElement('p');
+              p.textContent = ref.trim();
+              referencesEl.appendChild(p);
+            }
+          });
+
+          const peerReviewSummary = fullContext.aiPeerReviewData.strengths ? `Strengths: ${fullContext.aiPeerReviewData.strengths}. Weaknesses: ${fullContext.aiPeerReviewData.improvements}. Recommendations: ${fullContext.aiPeerReviewData.recommendations}.` : "No detailed peer review data found.";
+          prompt = `For an Appendix section of the paper "${fullContext.experimentTitle}", summarize key peer review feedback: "${peerReviewSummary}". Then summarize the researcher's response: "${fullContext.researcherResponseToReview}". Finally, include the core Python code used: \`\`\`python\n${fullContext.actualGeneratedPythonCode}\n\`\`\``;
+          setSectionContent('displayAppendixSection', '7. Appendix', await generateAiText(prompt));
+
+          alert('Full paper draft generated by AI!');
+
+        } catch (error) {
+          console.error("Error generating full paper:", error);
+          alert('An error occurred while generating the full paper. Please check the console.');
+        } finally {
+          generateFullPaperBtn.disabled = false;
+          generateFullPaperBtn.textContent = 'Generate Full Paper with AI';
+        }
+      });
+
     });
   </script>
 </body>
