@@ -2,9 +2,9 @@
 
 ## Overview
 
-Project Hypatia is a web-based application designed to guide users through a 10-step scientific research workflow, from initial question formulation to final publication export. Its core purpose is to demonstrate how Artificial Intelligence can assist researchers at each stage by generating relevant content, suggesting ideas, and automating parts of the documentation process.
+Project Hypatia is a web-based application designed to guide users through a 10-step scientific research workflow, from initial question formulation to final publication export. Its core purpose is to leverage Artificial Intelligence (via Google's Gemini API) to assist researchers at each stage by generating relevant content, suggesting ideas, and automating parts of the documentation process.
 
-The application simulates the research journey, providing a structured path and leveraging a mock AI service to populate fields, offer suggestions, and even generate draft sections of an academic paper.
+The application combines a JavaScript-based frontend for user interaction with a Python (Flask) backend that handles communication with the Gemini API.
 
 ## Key Features
 
@@ -14,175 +14,229 @@ The application simulates the research journey, providing a structured path and 
     3.  Hypothesis Builder
     4.  Methodology Designer
     5.  Data Gatherer (including AI-generated Python simulation code)
-    6.  Experiment Runner (mock Python execution)
+    6.  Experiment Runner (simulated Python execution in frontend)
     7.  Data Analyzer (including AI-generated interpretation)
     8.  Conclusion Drawer
     9.  Peer Reviewer (AI-generated mock review and draft response)
     10. Publication Exporter (AI-generated full paper draft)
-*   **AI Content Generation**: At each step, a mock AI assistant helps generate relevant text, data, or code.
-    *   Examples: Keywords, research domain, hypothesis statements, methodology details, Python code for experiment simulation, data interpretation, conclusion summaries, peer review feedback, and full academic paper sections.
-*   **Interactive Workflow**: Users can input their own data in Step 1, and review and edit AI-generated content in subsequent steps.
-*   **Data Persistence**: Utilizes browser `localStorage` to save progress and data across sessions within the same browser.
-*   **Mock Python Environment**: Simulates Python code generation (Step 5) and execution (Step 6), including a mock error/fix cycle.
-*   **Final Paper Generation**: Culminates in an AI-generated draft of a standard academic paper based on all data collected throughout the workflow.
-*   **User Authentication**: Simple login/signup system (data also stored in `localStorage`).
+*   **Real AI Content Generation**: Utilizes Google's Gemini API (via a Python backend) to generate text, data, and code suggestions.
+*   **Interactive Workflow**: Users can input their own data (Step 1) and review/edit AI-generated content in subsequent steps.
+*   **Data Persistence**: Employs browser `localStorage` to save progress and data across sessions within the same browser.
+*   **Python Code Generation**: AI generates Python code for experiment simulation in Step 5.
+*   **Simulated Python Execution**: Step 6 provides a frontend simulation of running the generated Python code.
+*   **User Authentication**: Simple login/signup system (data stored in `localStorage`).
 
 ## File Structure Map
 
-The project is organized as follows:
+The project is organized with a frontend application and a Python backend:
 
 ```
 .
+├── backend/
+│   ├── .env                 # Environment variables (GEMINI_API_KEY) - DO NOT COMMIT
+│   ├── .gitignore           # Specifies intentionally untracked files for backend
+│   ├── app.py               # Flask application, API endpoint
+│   ├── gemini_client.py     # Gemini API interaction logic
+│   ├── requirements.txt     # Python dependencies
+│   └── venv/                # Python virtual environment (if created here) - DO NOT COMMIT
 ├── Hyperion/
-│   └── ai-service.js        # Mock AI service for generating text content.
-│   └── project-hypatia-simplified-frontend-updated.zip # Original zip file (likely for reference)
+│   └── project-hypatia-simplified-frontend-updated.zip # Original zip file (for reference)
+│   └── ai-service.js        # DEPRECATED: Mock AI service (no longer used by core workflow)
 ├── workflow/
-│   ├── conclusion-drawer.html   # Step 8: Draw conclusions.
-│   ├── data-analyzer.html       # Step 7: Analyze experiment data.
-│   ├── data-gatherer.html       # Step 5: Gather data, AI generates Python simulation code.
-│   ├── experiment-runner.html   # Step 6: Mock Python code execution.
-│   ├── hypothesis-builder.html  # Step 3: Formulate hypothesis.
-│   ├── methodology-designer.html # Step 4: Design experimental methodology.
-│   ├── peer-reviewer.html       # Step 9: Get AI-generated peer review feedback.
-│   ├── publication-exporter.html # Step 10: Export AI-generated academic paper.
-│   ├── question-formulation.html # Step 1: Define research question.
-│   └── research-explorer.html   # Step 2: Explore existing research (literature review).
-├── dashboard.html               # User dashboard page (post-login).
-├── index.html                   # Main landing page, redirects to login or dashboard.
-├── login.html                   # User login page.
-├── signup.html                  # User signup page.
-├── LICENSE                      # Project license file.
+│   ├── conclusion-drawer.html   # Step 8
+│   ├── data-analyzer.html       # Step 7
+│   ├── data-gatherer.html       # Step 5
+│   ├── experiment-runner.html   # Step 6
+│   ├── hypothesis-builder.html  # Step 3
+│   ├── methodology-designer.html # Step 4
+│   ├── peer-reviewer.html       # Step 9
+│   ├── publication-exporter.html # Step 10
+│   ├── question-formulation.html # Step 1
+│   └── research-explorer.html   # Step 2
+├── dashboard.html
+├── index.html
+├── login.html
+├── signup.html
+├── LICENSE
 └── README.md                    # This file.
 ```
 
 ### Key Components:
 
-*   **`index.html`**: The main entry point for the application. It typically handles routing to the login page or the dashboard if the user is already authenticated.
-*   **`login.html`, `signup.html`, `dashboard.html`**: Standard pages for user authentication and navigating to the research workflow.
-*   **`workflow/` directory**: Contains the HTML files for each of the 10 steps in the research process. Each file is a self-contained page for that specific stage.
-*   **`Hyperion/ai-service.js`**: This crucial JavaScript file simulates the backend AI model. It contains the `generateAiText` function that takes prompts (constructed by the logic in each workflow HTML file) and returns predefined, mock AI-generated text responses. All AI capabilities in this project are routed through this mock service.
-*   **HTML Files (`*.html`)**: Standard HTML structure, incorporating Bootstrap for styling and custom JavaScript within `<script>` tags for page-specific logic, AI interaction, `localStorage` management, and navigation.
+*   **`index.html`**: Main frontend entry point.
+*   **`login.html`, `signup.html`, `dashboard.html`**: User authentication and navigation.
+*   **`workflow/` directory**: HTML files for each of the 10 research workflow steps.
+*   **`backend/app.py`**: The Flask application server that provides the `/api/generate` endpoint for AI requests.
+*   **`backend/gemini_client.py`**: Contains the Python logic to interact with the Google Gemini API.
+*   **`backend/requirements.txt`**: Lists Python dependencies for the backend (Flask, google-generativeai, python-dotenv, Flask-CORS).
+*   **`backend/.env`**: Stores the `GEMINI_API_KEY` (must be created manually by the user).
+*   **`Hyperion/ai-service.js`**: **Deprecated.** Previously simulated the AI; now replaced by the Python backend.
 
 ## Installation and Use Guide
 
-### Installation
+Project Hypatia now consists of a frontend (HTML/JS client-side application) and a Python-based backend for AI capabilities. Both need to be set up correctly for the application to function as intended.
 
-Project Hypatia is a client-side web application and does not require a complex installation process or backend server.
+### Prerequisites
 
-1.  **Clone or Download the Repository:**
-    *   Obtain the project files by cloning the GitHub repository or downloading it as a ZIP file and extracting it.
+*   A modern web browser (e.g., Chrome, Firefox, Edge, Safari).
+*   Python 3.7+ installed on your system.
+*   Ability to create and manage Python virtual environments.
+*   A valid Google Gemini API Key.
+
+### 1. Backend Setup
+
+The backend server handles communication with the Google Gemini API.
+
+1.  **Navigate to Backend Directory:**
+    Open your terminal or command prompt and navigate into the `backend/` directory from the project root:
     ```bash
-    git clone <repository_url> # Replace <repository_url> with the actual URL
-    cd <project_directory>   # Replace <project_directory> with the folder name
+    cd backend
     ```
-2.  **Open in a Web Browser:**
-    *   Navigate to the project's root directory.
-    *   Open the `index.html` file in a modern web browser (e.g., Chrome, Firefox, Edge, Safari) that supports HTML5, CSS3, modern JavaScript (ES6+), and Web Storage (`localStorage`).
-    *   No build steps or dependencies installations are required to run the basic frontend. The application uses Bootstrap via a CDN, and Plotly.js (for Step 7) is also loaded via a CDN, so an internet connection is recommended for these libraries to load correctly.
 
-### Use Guide / Operating Instructions
+2.  **Create a Python Virtual Environment:**
+    It's highly recommended to use a virtual environment to manage dependencies.
+    ```bash
+    python -m venv venv  # Or python3 -m venv venv
+    ```
 
-1.  **Authentication:**
-    *   On first visit, you'll be directed to `login.html`.
-    *   If you don't have an account, click the link to navigate to `signup.html` to create one. User credentials (email and password) are stored in `localStorage` for demonstration purposes.
-    *   Upon successful login/signup, you'll be redirected to `dashboard.html`.
+3.  **Activate the Virtual Environment:**
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    Your terminal prompt should change to indicate the active virtual environment.
 
-2.  **Starting a New Workflow:**
-    *   From the dashboard, you can typically start or continue a research project. (The current dashboard is basic; navigation to Step 1, `workflow/question-formulation.html`, is the primary path).
+4.  **Install Dependencies:**
+    Install the required Python packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-3.  **Navigating the 10-Step Workflow:**
-    *   The application guides you through 10 distinct steps. Each step is represented by an HTML page in the `workflow/` directory.
-    *   **Step 1: Question Formulation**: Enter your "Experiment Title" and "Research Question". Click "Generate AI Suggestions" to have the mock AI populate "Keywords" and "Research Domain". You can edit these. Click "Next" to save and proceed.
-    *   **Step 2: Research Explorer**: This step is primarily for user input regarding literature review.
-    *   **Step 3: Hypothesis Builder**: Click "Generate Full Hypothesis with AI". The AI will use data from Steps 1 & 2 to generate hypothesis components. Edit as needed.
-    *   **Step 4: Methodology Designer**: Click "Generate Complete Methodology". The AI uses prior data to suggest methodology details.
-    *   **Step 5: Data Gatherer**: Click "Generate AI Suggestions for This Step". The AI suggests data source types, formats, generates mock "Available Datasets", and Python code for simulating your experiment.
-    *   **Step 6: Experiment Runner**: The Python code from Step 5 is displayed. Click "Run Experiment" for a simulated execution (including a mock error/fix cycle).
-    *   **Step 7: Data Analyzer**: Click "Generate AI Analysis & Interpretation". The AI suggests chart/test parameters and generates a textual interpretation of Step 6's outcome.
-    *   **Step 8: Conclusion Drawer**: Click "Generate Complete Conclusion". The AI determines hypothesis support and generates conclusion text.
-    *   **Step 9: Peer Reviewer**: Click "Generate AI Peer Review & Draft Response". The AI generates mock peer review comments and drafts a response.
-    *   **Step 10: Publication Exporter**: Click "Generate Full Paper with AI". The AI drafts an academic paper based on all prior data.
+5.  **Set up Environment Variables (`.env` file):**
+    *   In the `backend/` directory, create a file named `.env` (if it doesn't exist or if you need to modify the template).
+    *   Add your Google Gemini API key to this file:
+        ```env
+        GEMINI_API_KEY="YOUR_ACTUAL_GEMINI_API_KEY"
+        FLASK_APP="app.py"
+        FLASK_DEBUG=1 # Enables debug mode for development
+        ```
+    *   **Important:** Replace `"YOUR_ACTUAL_GEMINI_API_KEY"` with your real API key.
+    *   The `.env` file is listed in `backend/.gitignore`, so your API key will not be committed to version control. **Keep your API key secure.**
 
-4.  **AI Interaction:**
-    *   Most steps feature a button that explicitly calls the (mock) AI to generate content.
-    *   AI suggestions are drafts. **Users can and should edit AI-generated content.**
+6.  **Run the Backend Server:**
+    Once the dependencies are installed and the `.env` file is configured, run the Flask development server:
+    ```bash
+    python app.py
+    ```
+    You should see output indicating the server is running, typically on `http://localhost:5000/` or `http://0.0.0.0:5000/`.
+    The server needs to remain running while you use the frontend application.
 
-5.  **Data Persistence:**
-    *   All data is saved in the browser's `localStorage`. Progress is saved per browser. Clearing storage erases work.
-    *   No backend database is used.
+### 2. Frontend Setup & Usage
 
-6.  **Mock Nature:**
-    *   The AI (`Hyperion/ai-service.js`) is a simulation, returning predefined text.
-    *   Python code execution (Step 6) is also a frontend simulation.
+1.  **Open `index.html` in a Web Browser:**
+    *   Navigate to the project's **root** directory (the one containing `index.html`, not the `backend/` directory).
+    *   Open the `index.html` file in your web browser.
+
+2.  **Ensure Backend is Running:**
+    *   For the AI features in the application to work, the Python backend server (set up in the previous section) **must be running** and accessible (typically at `http://localhost:5000`).
+
+3.  **Using the Application:**
+    *   **Authentication:** Log in or sign up as before. This data is still stored in `localStorage`.
+    *   **Workflow Navigation:** Proceed through the 10-step workflow.
+    *   **AI Interaction:** When you click buttons like "Generate AI Suggestions," "Generate Full Hypothesis with AI," etc., the frontend will now make API calls to your local Python backend. The backend then queries the Gemini API and returns the results.
+    *   **Editing & Saving:** You can still edit AI-generated content. All data is saved to `localStorage` when you click "Next" to move between steps.
+
+### Key Operational Notes:
+
+*   **Two Components:** Remember you are running two main parts: the Python backend server in your terminal and the HTML/JavaScript frontend in your browser.
+*   **API Key Security:** Your Gemini API key is used by the backend. Ensure the `.env` file is secure and not shared or committed.
+*   **Error Handling:** If the backend isn't running or if there's an issue with your API key or the Gemini service, the frontend should display an error message (often in an alert). Check the browser's developer console and the backend terminal output for more detailed error information.
+*   **CORS:** The backend is configured with `Flask-CORS` to allow requests from the frontend. The default development setting allows all origins, which is fine for local development.
 
 ## Data Flow Map for Agentic Processes
 
-The "agentic process" in Project Hypatia refers to how the application uses AI (currently mocked) to generate content. Data flow is orchestrated via JavaScript and `localStorage`.
+The "agentic process" in Project Hypatia now involves communication between the frontend JavaScript, the Python backend server, and the Google Gemini API for AI-driven content generation. `localStorage` remains crucial for passing data between frontend workflow steps.
 
-1.  **User Input & Context Aggregation:**
-    *   User triggers AI action (button click).
-    *   JS retrieves current user input and prior step data from `localStorage` (this is the **context**).
-2.  **Prompt Construction:**
-    *   JS dynamically creates a detailed **prompt string** including the context.
-3.  **AI Service Call:**
-    *   Prompt goes to `generateAiText()` in `Hyperion/ai-service.js` (mock service).
-    *   Service returns a predefined text response based on prompt keywords.
-4.  **Response Processing & UI Population:**
-    *   JS receives the mock AI response.
-    *   Response populates form fields or display areas.
-5.  **User Review and Editing:**
-    *   User reviews and **can edit/overwrite** AI content.
-6.  **Data Persistence for Next Step:**
-    *   On "Next", JS saves final field states (including edits) to `localStorage`.
-    *   This data informs future AI generation.
+1.  **User Input & Context Aggregation (Frontend):**
+    *   User initiates an AI action (e.g., clicking a "Generate..." button).
+    *   JavaScript on the current HTML page gathers:
+        *   Direct user input from the page.
+        *   Relevant data from previous steps, retrieved from `localStorage`. This forms the **context**.
+2.  **Prompt Construction (Frontend):**
+    *   Based on the specific task, JavaScript dynamically constructs a detailed **prompt string**, incorporating the aggregated context.
+3.  **API Request to Backend (Frontend to Backend):**
+    *   The frontend JavaScript uses the `fetch()` API to make an HTTP POST request to the `/api/generate` endpoint on the local Python backend server (typically `http://localhost:5000/api/generate`).
+    *   The request body contains the constructed `prompt` in JSON format (e.g., `{"prompt": "your detailed prompt here"}`).
+4.  **AI Service Call (Backend to Gemini API):**
+    *   The Python Flask backend receives the request.
+    *   The `/api/generate` endpoint in `backend/app.py` calls the `generate_text_async()` function in `backend/gemini_client.py`, passing the received prompt.
+    *   `gemini_client.py` uses the `google-generativeai` SDK to send the prompt to the configured Google Gemini model.
+5.  **Response from Gemini API (Gemini API to Backend):**
+    *   The Gemini API processes the prompt and returns the generated text (or an error) to the Python backend.
+6.  **API Response to Frontend (Backend to Frontend):**
+    *   The Python backend sends a JSON response back to the frontend.
+        *   On success: `{"text": "AI-generated content"}`
+        *   On error (either from Gemini or within the backend): `{"error": "Error message"}`
+7.  **Response Processing & UI Population (Frontend):**
+    *   The frontend JavaScript (`fetch` call's `.then()` or `await`) receives and parses the JSON response from the backend.
+    *   If an error is present, it's typically displayed in an alert.
+    *   If successful, the `text` content is used to populate the relevant form fields or display areas on the current HTML page.
+8.  **User Review and Editing (Frontend):**
+    *   The user reviews the AI-generated content provided by the Gemini API.
+    *   The user can **edit or overwrite** this content.
+9.  **Data Persistence for Next Step (Frontend):**
+    *   When the user clicks the "Next" button, JavaScript on the current page saves the final state of all relevant form fields (including any user-edited AI-generated content) into `localStorage`.
+    *   This data then becomes part of the context for AI generation in subsequent steps.
 
-### Example Data Flow Snippets:
+## Technical Stack
 
-*   **Step 1 -> Step 3:**
-    1.  **Step 1**: User inputs title/question. AI suggests keywords/domain. Data saved to `localStorage`.
-    2.  **Step 3**: AI uses Step 1 data from `localStorage` to generate hypothesis components.
-*   **Step 5 -> Step 6 -> Step 7:**
-    1.  **Step 5**: AI generates Python code (`generatedPythonCode`), saved to `localStorage`.
-    2.  **Step 6**: Code loaded. Mock execution. Output/error (`experimentRunOutput`/`Error`) saved. `actualGeneratedPythonCode` (possibly "fixed") also saved.
-    3.  **Step 7**: AI uses code, output/error, and hypothesis from `localStorage` for `aiDataInterpretation`.
-*   **Step 9 -> Step 10:**
-    1.  **Step 9**: AI generates mock peer review (`aiPeerReviewData`) and draft response, saved to `localStorage`.
-    2.  **Step 10**: AI uses all prior data from `localStorage` (Steps 1-9) to draft each section of the final paper.
-
-## Technical Stack and Mocking
-
-### Technical Stack
-
+### Frontend
 *   **HTML5**: Structure.
 *   **CSS3**: Styling, with [Bootstrap 5.3](https://getbootstrap.com/) via CDN.
-*   **JavaScript (ES6+)**: Dynamic behavior, workflow logic, AI calls, `localStorage`. (Embedded or in linked `.js` files).
+*   **JavaScript (ES6+)**: Dynamic behavior, workflow logic, `fetch` API calls to the backend, `localStorage`.
+*   **Bootstrap 5.3**: CSS framework (CDN).
 *   **Plotly.js**: Graphing library (Step 7), via CDN.
 *   **Web Storage (`localStorage`)**: Data persistence.
 
-No backend technologies or databases are currently used.
+### Backend
+*   **Python 3.x**: Language for the backend server.
+*   **Flask**: Lightweight web framework for the API.
+*   **`google-generativeai`**: Google Python SDK for Gemini API.
+*   **`python-dotenv`**: Manages environment variables from `.env`.
+*   **`Flask-CORS`**: Handles Cross-Origin Resource Sharing.
 
-### AI and Python Execution Mocking
+### Deprecated Components
+*   **`Hyperion/ai-service.js`**: Previously provided mock AI responses; now **deprecated** and replaced by the Python backend.
 
-Key functionalities are **mocked**:
+## Python Execution Simulation (Step 6)
 
-1.  **AI Service (`Hyperion/ai-service.js`)**:
-    *   **No connection to a real LLM.**
-    *   `generateAiText(prompt)` simulates AI by returning predefined text based on prompt keywords.
-    *   Allows demonstration without real AI integration complexities or costs.
-2.  **Python Code Execution (Step 6)**:
-    *   **Does not actually execute Python code.**
-    *   JavaScript simulates execution by checking the AI-generated Python string for patterns and displaying mock success/error messages.
-    *   No Python interpreter is used.
+While AI content generation now uses the real Google Gemini API, one key area remains a **simulation within the frontend**:
+
+1.  **Python Code Execution (Step 6 - `experiment-runner.html`)**:
+    *   In Step 5 (`data-gatherer.html`), the Gemini API generates Python code.
+    *   In Step 6 (`experiment-runner.html`), this code is displayed. However, the application **does not actually execute this Python code**.
+    *   The "Run Experiment" functionality is a **JavaScript-based simulation**. It checks the Python code string for patterns and displays mock success/error messages.
+    *   The "Attempt AI Fix & Rerun" feature also simulates an AI fix before the mock rerun.
+    *   No Python interpreter is used by the frontend for execution.
 
 ## Future Enhancements
 
-While Project Hypatia is a conceptual demo, future development could include:
+While Project Hypatia now leverages a real AI backend, future development can enhance its capabilities:
 
-1.  **Real AI Integration:** Connect to actual LLM APIs (e.g., Google's Gemini, OpenAI's GPT models).
-2.  **Real Python Execution Environment:** Use Pyodide, Skulpt, or a backend to run Python code, with AI generating code for specific, pre-installed libraries.
-3.  **Backend Database Storage:** For multi-device access and robust data storage.
-4.  **Enhanced Literature Review (Step 2):** Integrate with academic search APIs.
-5.  **Improved UI/UX:** Refine interface, add richer editing and visualization.
-6.  **Collaboration Features.**
-7.  **Version Control for Research Steps.**
-8.  **More Sophisticated Prompt Engineering** for real AI models.
+1.  **Real Python Execution Environment:**
+    *   Integrate a service (e.g., Pyodide, Skulpt, or a custom sandboxed backend) to execute the AI-generated Python code from Step 6.
+    *   Refine AI code generation (Step 5) to use only pre-approved dependencies for such an environment.
+2.  **Refined AI Prompt Engineering:**
+    *   Continuously improve prompts for the Gemini API for higher quality and more nuanced AI-generated content.
+3.  **Backend Database Storage:**
+    *   Implement a database for persistent user accounts and project data, enabling multi-device access.
+4.  **Enhanced Literature Review (Step 2):**
+    *   Integrate with academic search APIs (e.g., Semantic Scholar) for real literature searches and summarization.
+5.  **Improved UI/UX:**
+    *   Refine error display, data visualization, and overall user experience.
+6.  **Collaboration Features & Version Control.**
+7.  **Cleanup Deprecated Code:** Remove the unused `Hyperion/ai-service.js`.
