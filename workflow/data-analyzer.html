@@ -196,6 +196,7 @@
               </select>
             </div>
             <button type="button" class="btn btn-primary w-100" id="runTestBtn">Run Statistical Test</button>
+            <button type="button" class="btn btn-info w-100 mt-3" id="generateAiAnalysisBtn">Generate AI Analysis & Interpretation</button>
             <div class="d-flex justify-content-between mt-4">
               <button type="button" class="btn btn-outline-primary" id="prevStepBtn">Previous Step</button>
               <button type="button" class="btn btn-primary" id="nextStepBtn">Next: Conclusion Drawer</button>
@@ -222,11 +223,20 @@
             </div>
           </div>
         </div>
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">AI Data Interpretation</h5>
+          </div>
+          <div class="card-body">
+            <textarea class="form-control" id="aiInterpretationText" rows="8" placeholder="AI will generate an interpretation of the data analysis here..."></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -332,12 +342,133 @@
       
       // Handle next step button
       document.getElementById('nextStepBtn').addEventListener('click', function() {
+        // Save selections and AI interpretation
+        localStorage.setItem('selectedChartType', document.getElementById('chartType').value);
+        localStorage.setItem('selectedStatisticalTest', document.getElementById('statisticalTest').value);
+        localStorage.setItem('aiDataInterpretation', document.getElementById('aiInterpretationText').value);
+
         localStorage.setItem('currentStep', 'Conclusion Drawer');
         window.location.href = 'conclusion-drawer.html';
       });
 
+      // AI Analysis Button
+      const generateAiAnalysisBtn = document.getElementById('generateAiAnalysisBtn');
+      const aiInterpretationTextarea = document.getElementById('aiInterpretationText'); // Element ID is aiInterpretationText
+      const chartTypeSelect = document.getElementById('chartType');
+      // const xAxisSelect = document.getElementById('xAxis'); // Not directly set by this AI button in the plan
+      // const yAxisSelect = document.getElementById('yAxis'); // Not directly set by this AI button in the plan
+      const statisticalTestSelect = document.getElementById('statisticalTest');
+
+
+      generateAiAnalysisBtn.addEventListener('click', async function() {
+        const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+        const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+        const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+        const experimentRunOutput = localStorage.getItem('experimentRunOutput') || "";
+        const experimentRunError = localStorage.getItem('experimentRunError') || "";
+        const actualGeneratedPythonCode = localStorage.getItem('actualGeneratedPythonCode') || "";
+
+        let experimentOutcomeContext = experimentRunError
+            ? `Experiment failed with error: ${experimentRunError}`
+            : `Experiment completed with output: ${experimentRunOutput}`;
+        if (!experimentRunError && !experimentRunOutput) {
+            experimentOutcomeContext = "Experiment outcome not yet available or not recorded.";
+        }
+
+        const baseContext = `
+          Project Title: ${experimentTitle}
+          Research Question: ${researchQuestion}
+          Hypothesis: "${hypothesisStatement}"
+          Python Code Used:
+${actualGeneratedPythonCode}
+
+          Experiment Outcome:
+${experimentOutcomeContext}
+
+        `;
+
+        generateAiAnalysisBtn.disabled = true;
+        generateAiAnalysisBtn.textContent = 'Generating AI Analysis...';
+        if(aiInterpretationTextarea) aiInterpretationTextarea.value = "AI is analyzing...";
+
+
+        try {
+          async function fetchAiData(promptContent) {
+            const response = await fetch('http://localhost:5000/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: promptContent }),
+            });
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+              throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
+            }
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(`AI Error: ${data.error}`);
+            }
+            return data.text || '';
+          }
+
+          let prompt = `Given the experiment context and outcome:\n${baseContext}\nSuggest a suitable Chart Type (e.g., scatter, line, bar, histogram, boxplot) for visualizing the primary results. Respond with only the chart type value (e.g., 'scatter').`;
+          const genChartType = (await fetchAiData(prompt)).trim().toLowerCase();
+          if (genChartType && chartTypeSelect) {
+              let typeSet = false;
+              for (let i = 0; i < chartTypeSelect.options.length; i++) {
+                if (chartTypeSelect.options[i].value.toLowerCase() === genChartType) {
+                  chartTypeSelect.selectedIndex = i;
+                  typeSet = true;
+                  break;
+                }
+              }
+              if (!typeSet) console.warn(\`AI generated chartType '\${genChartType}' not in dropdown.\`);
+          }
+
+          prompt = `Given the experiment context, outcome, and hypothesis:\n${baseContext}\nSuggest an appropriate Statistical Test (e.g., t_test, anova, chi_squared, correlation, regression). Respond with only the test value (e.g., 'regression').`;
+          const genStatisticalTest = (await fetchAiData(prompt)).trim().toLowerCase();
+          if (genStatisticalTest && statisticalTestSelect) {
+              let testSet = false;
+              for (let i = 0; i < statisticalTestSelect.options.length; i++) {
+                if (statisticalTestSelect.options[i].value.toLowerCase() === genStatisticalTest) {
+                  statisticalTestSelect.selectedIndex = i;
+                  testSet = true;
+                  break;
+                }
+              }
+              if (!testSet) console.warn(\`AI generated statisticalTest '\${genStatisticalTest}' not in dropdown.\`);
+          }
+
+          const currentChartType = chartTypeSelect ? chartTypeSelect.value : "N/A";
+          const currentStatTest = statisticalTestSelect ? statisticalTestSelect.value : "N/A";
+
+          const interpretationPrompt = `
+            Based on the complete research context:
+            ${baseContext}
+            And assuming data analysis was performed using:
+            Chart Type: ${currentChartType}
+            Statistical Test: ${currentStatTest}
+            (The actual chart and statistical output are mocked/simulated based on the experiment outcome.)
+            Provide a detailed interpretation of the experimental results. Discuss whether the hypothesis appears to be supported by the outcome, highlight any significant patterns or simulated statistical values (like R-squared if mentioned in outcome), and note any immediate concerns or key findings based *solely* on the provided context and experiment outcome.
+          `;
+          const interpretationText = await fetchAiData(interpretationPrompt);
+          if (aiInterpretationTextarea) aiInterpretationTextarea.value = interpretationText;
+
+          alert('AI analysis suggestions and interpretation have been generated from the live API!');
+
+        } catch (error) {
+          console.error("Error generating AI analysis:", error);
+          if(aiInterpretationTextarea) aiInterpretationTextarea.value = "Error generating AI interpretation. Please check console.";
+          alert(`There was an error generating AI analysis: ${error.message}`);
+        } finally {
+          generateAiAnalysisBtn.disabled = false;
+          generateAiAnalysisBtn.textContent = 'Generate AI Analysis & Interpretation';
+        }
+      });
+
       // Generate initial chart on load
-      document.getElementById('generateChartBtn').click();
+      if(document.getElementById('generateChartBtn')) { // Check if button exists before clicking
+        document.getElementById('generateChartBtn').click();
+      }
     });
   </script>
 </body>

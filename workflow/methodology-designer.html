@@ -276,6 +276,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -333,20 +334,105 @@
       });
       
       // Handle generate methodology button
-      document.getElementById('generateMethodology').addEventListener('click', function() {
-        // In a real app, this would call the LLM API
-        alert('AI would generate a complete methodology based on your experiment details.');
-        
-        // For demo purposes, fill in some sample data
-        document.getElementById('experimentType').value = 'controlled';
-        document.getElementById('independentVar').value = 'Temperature (°C)';
-        document.getElementById('dependentVar').value = 'Reaction Rate (mol/L/s)';
-        document.getElementById('controlVar1').value = 'Concentration of Reactants';
-        document.getElementById('controlVar2').value = 'Pressure';
-        document.getElementById('sampleSize').value = '30';
-        document.getElementById('procedure').value = '1. Prepare 5 water baths at different temperatures (10°C, 20°C, 30°C, 40°C, 50°C).\n2. Prepare identical reaction mixtures for each temperature.\n3. Place reaction vessels in respective water baths and allow to equilibrate.\n4. Add catalyst to start reaction and begin timing.\n5. Measure product formation at 30-second intervals for 5 minutes.\n6. Repeat each temperature condition 6 times for statistical validity.';
-        document.getElementById('materials').value = '- Temperature-controlled water baths\n- Reaction vessels (50mL beakers)\n- Thermometers\n- Stopwatch\n- Spectrophotometer\n- Reactants A and B\n- Catalyst\n- Pipettes and graduated cylinders';
-        document.getElementById('dataCollection').value = 'Measure reaction progress using spectrophotometry at 450nm wavelength. Record absorbance values at 30-second intervals and convert to concentration using a pre-established calibration curve.';
+      const generateMethodologyBtn = document.getElementById('generateMethodology');
+      const experimentTypeSelect = document.getElementById('experimentType');
+      const independentVarInput = document.getElementById('independentVar');
+      const dependentVarInput = document.getElementById('dependentVar');
+      const controlVar1Input = document.getElementById('controlVar1');
+      const controlVar2Input = document.getElementById('controlVar2');
+      const sampleSizeInput = document.getElementById('sampleSize');
+      const procedureTextarea = document.getElementById('procedure');
+      const materialsTextarea = document.getElementById('materials');
+      const dataCollectionTextarea = document.getElementById('dataCollection');
+
+      generateMethodologyBtn.addEventListener('click', async function() {
+        const experimentTitle = localStorage.getItem('experimentTitle') || "N/A";
+        const researchQuestion = localStorage.getItem('researchQuestion') || "N/A";
+        const researchDomain = localStorage.getItem('researchDomain') || "N/A";
+        const keywords = localStorage.getItem('keywords') || "N/A";
+        const hypothesisType = localStorage.getItem('hypothesisType') || "N/A";
+        const hypothesisStatement = localStorage.getItem('hypothesisStatement') || "N/A";
+
+        const baseContext = `
+          Project Details:
+          Title: ${experimentTitle}
+          Research Question: ${researchQuestion}
+          Domain: ${researchDomain}
+          Keywords: ${keywords}
+          Hypothesis Type: ${hypothesisType}
+          Hypothesis Statement: "${hypothesisStatement}"
+        `;
+
+        generateMethodologyBtn.disabled = true;
+        generateMethodologyBtn.textContent = 'Generating Methodology...';
+
+        try {
+          async function fetchAiData(promptContent) {
+            const response = await fetch('http://localhost:5000/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: promptContent }),
+            });
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+              throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
+            }
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(`AI Error: ${data.error}`);
+            }
+            return data.text || '';
+          }
+
+          let prompt = `Based on the context:\n${baseContext}\nSuggest an appropriate experiment type (e.g., controlled, observational, survey, simulation). Respond with only the suggested type.`;
+          const genExperimentType = (await fetchAiData(prompt)).trim();
+          if (genExperimentType) {
+              let typeSet = false;
+              for (let i = 0; i < experimentTypeSelect.options.length; i++) {
+                if (experimentTypeSelect.options[i].value.toLowerCase() === genExperimentType.toLowerCase()) {
+                  experimentTypeSelect.selectedIndex = i;
+                  typeSet = true;
+                  break;
+                }
+              }
+              if (!typeSet) console.warn(\`AI generated experiment type '${genExperimentType}' not in dropdown.\`);
+          } else {
+              console.warn('AI did not return an experiment type.');
+          }
+
+          prompt = `Based on the context:\n${baseContext}\nDefine the primary independent variable for this experiment.`;
+          independentVarInput.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context:\n${baseContext}\nDefine the primary dependent variable that will be measured.`;
+          dependentVarInput.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context:\n${baseContext}\nSuggest one key control variable that needs to be kept constant.`;
+          controlVar1Input.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context:\n${baseContext}\nSuggest a second important control variable.`;
+          controlVar2Input.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context:\n${baseContext}\nRecommend a suitable sample size or number of trials/replicates. Provide a brief justification if possible.`;
+          sampleSizeInput.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context:\n${baseContext}\nAnd the defined variables (IV: ${independentVarInput.value || 'Not yet defined'}, DV: ${dependentVarInput.value || 'Not yet defined'}), outline a detailed, step-by-step experimental procedure.`;
+          procedureTextarea.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context and the procedure:\n${procedureTextarea.value || 'Procedure not yet defined'}\nList necessary materials and equipment.`;
+          materialsTextarea.value = await fetchAiData(prompt);
+
+          prompt = `Based on the context, procedure, and variables (especially DV: ${dependentVarInput.value || 'Not yet defined'}):\n${baseContext}\nDescribe the specific method for collecting data on the dependent variable.`;
+          dataCollectionTextarea.value = await fetchAiData(prompt);
+
+          alert('AI suggestions for the methodology have been generated from the live API and populated!');
+
+        } catch (error) {
+          console.error("Error generating AI methodology suggestions:", error);
+          alert(`There was an error generating AI methodology suggestions: ${error.message}`);
+        } finally {
+          generateMethodologyBtn.disabled = false;
+          generateMethodologyBtn.textContent = 'Generate Complete Methodology';
+        }
       });
     });
   </script>

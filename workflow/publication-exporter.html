@@ -233,38 +233,47 @@
           </div>
           <div class="card-body">
             <div class="paper-preview">
-              <div class="paper-title">Effect of Temperature on Reaction Rates: An Experimental Study</div>
+              <div class="paper-title" id="displayPaperTitle">Paper Title Will Appear Here</div>
               <div class="paper-authors">Author: <span id="paperAuthor"></span></div>
               
               <div class="paper-abstract">
-                <strong>Abstract:</strong> This study investigates the relationship between temperature and reaction rate in a controlled chemical system. Using the Arrhenius equation as a theoretical framework, we conducted experiments across a temperature range of 10-50°C. Our results demonstrate a clear exponential relationship between temperature and reaction rate, with an activation energy of 45.2 kJ/mol and a pre-exponential factor of 1.2 × 10⁹. These findings support the hypothesis that reaction rates approximately double for each 10°C increase in temperature within the studied range. The high R² value of 0.9982 indicates an excellent fit to the Arrhenius model, validating its applicability for predicting reaction kinetics in similar systems.
+                <strong>Abstract:</strong>
+                <p id="displayPaperAbstract">Abstract will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayIntroductionSection">
                 <h3>1. Introduction</h3>
-                <p>Temperature is one of the most critical factors affecting the rate of chemical reactions. The relationship between temperature and reaction rate has been extensively studied and is commonly described by the Arrhenius equation. This equation provides a mathematical model that relates the rate constant of a chemical reaction to the absolute temperature, activation energy, and pre-exponential factor.</p>
-                <p>In this study, we aim to experimentally verify the Arrhenius relationship and quantify the effect of temperature on reaction rates in a controlled system. Our hypothesis predicts that reaction rates will increase exponentially with temperature, approximately doubling for each 10°C increase.</p>
+                <p>Introduction will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayMethodologySection">
                 <h3>2. Methodology</h3>
-                <p>We conducted a controlled experiment using a model reaction system across five temperature points (10°C, 20°C, 30°C, 40°C, and 50°C). All other variables, including reactant concentration, pressure, and catalyst presence, were held constant. Reaction rates were measured using spectrophotometry, with six replicate measurements at each temperature to ensure statistical validity.</p>
+                <p>Methodology will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayResultsSection">
                 <h3>3. Results</h3>
-                <p>The experimental data showed a clear exponential relationship between temperature and reaction rate. The measured rates increased from 0.0015 mol/L/s at 10°C to 0.0295 mol/L/s at 50°C. Fitting the data to the Arrhenius equation yielded an activation energy of 45.2 kJ/mol and a pre-exponential factor of 1.2 × 10⁹, with an R² value of 0.9982.</p>
+                <p>Results will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayDiscussionSection">
                 <h3>4. Discussion</h3>
-                <p>Our results strongly support the hypothesis that reaction rates increase exponentially with temperature according to the Arrhenius equation. The high R² value indicates that the model explains nearly all of the variance in the observed data. The calculated activation energy is consistent with typical values for this type of reaction.</p>
-                <p>Limitations of this study include the relatively narrow temperature range and the focus on a single reaction type. Future research should expand the temperature range and investigate different chemical systems to test the broader applicability of these findings.</p>
+                <p>Discussion will be generated here...</p>
               </div>
               
-              <div class="paper-section">
+              <div class="paper-section" id="displayConclusionSection">
                 <h3>5. Conclusion</h3>
-                <p>This study confirms that temperature has a significant and predictable effect on reaction rates, following the Arrhenius equation. The experimental results provide quantitative parameters that can be used to predict reaction rates at different temperatures within the studied range. These findings have implications for optimizing reaction conditions in various chemical processes and understanding temperature-dependent phenomena in natural systems.</p>
+                <p>Conclusion will be generated here...</p>
+              </div>
+
+              <div class="paper-section" id="displayReferencesSection">
+                <h3>6. References</h3>
+                <p>References will be generated here...</p>
+              </div>
+
+              <div class="paper-section" id="displayAppendixSection">
+                <h3>7. Appendix</h3>
+                <p>Appendix content will be generated here...</p>
               </div>
             </div>
             <div class="d-flex justify-content-between mt-4">
@@ -308,6 +317,7 @@
                 <p>For academic journal submissions</p>
               </div>
             </div>
+            <button type="button" class="btn btn-success w-100 mb-3" id="generateFullPaperBtn">Generate Full Paper with AI</button>
             <button type="button" class="btn btn-primary w-100 mt-3" id="exportBtn">Export Paper</button>
             
             <div class="mt-4">
@@ -328,6 +338,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- <script src="../Hyperion/ai-service.js"></script> --> <!-- Switched to backend API -->
   <script>
     // Check if user is authenticated
     document.addEventListener('DOMContentLoaded', function() {
@@ -340,9 +351,60 @@
         return;
       }
       
-      // Display user email
-      document.getElementById('userEmail').textContent = userEmail;
-      document.getElementById('paperAuthor').textContent = userEmail;
+      // Display user email and load initial fields
+      const userEmailEl = document.getElementById('userEmail');
+      const paperAuthorEl = document.getElementById('paperAuthor');
+      const userEmailEl = document.getElementById('userEmail');
+      const paperAuthorSpan = document.getElementById('paperAuthor');
+      const paperTitleInput = document.getElementById('paperTitle');
+      const paperKeywordsInput = document.getElementById('paperKeywords');
+      const displayPaperTitle = document.getElementById('displayPaperTitle');
+      const displayPaperAbstract = document.getElementById('displayPaperAbstract');
+      const displayIntroductionSection = document.getElementById('displayIntroductionSection');
+      const displayMethodologySection = document.getElementById('displayMethodologySection');
+      const displayResultsSection = document.getElementById('displayResultsSection');
+      const displayDiscussionSection = document.getElementById('displayDiscussionSection');
+      const displayConclusionSection = document.getElementById('displayConclusionSection');
+      const displayReferencesSection = document.getElementById('displayReferencesSection');
+      const displayAppendixSection = document.getElementById('displayAppendixSection');
+      const generateFullPaperBtn = document.getElementById('generateFullPaperBtn');
+
+      if (userEmailEl) userEmailEl.textContent = userEmail;
+
+      function initializePaperPreview() {
+          const sections = {
+              displayPaperAbstract: displayPaperAbstract, // Here, displayPaperAbstract is the <p> element itself
+              displayIntroductionSection: displayIntroductionSection,
+              displayMethodologySection: displayMethodologySection,
+              displayResultsSection: displayResultsSection,
+              displayDiscussionSection: displayDiscussionSection,
+              displayConclusionSection: displayConclusionSection,
+              displayReferencesSection: displayReferencesSection,
+              displayAppendixSection: displayAppendixSection
+          };
+          for (const key in sections) {
+              const sectionElement = sections[key];
+              if (sectionElement) {
+                  if (key === 'displayPaperAbstract') {
+                      sectionElement.textContent = 'Abstract will be generated by AI...';
+                  } else {
+                      // Preserve H3, clear other content, add placeholder <p>
+                      const h3 = sectionElement.querySelector('h3');
+                      sectionElement.innerHTML = ''; // Clear all children
+                      if (h3) sectionElement.appendChild(h3);
+                      const p = document.createElement('p');
+                      p.textContent = `Content for ${h3 ? h3.textContent.split('.')[1].trim() : key.replace('display', '').replace('Section','')} will be generated by AI...`;
+                      sectionElement.appendChild(p);
+                  }
+              }
+          }
+          const currentExpTitle = localStorage.getItem('experimentTitle') || "Paper Title Loading...";
+          if (displayPaperTitle) displayPaperTitle.textContent = currentExpTitle;
+          if (paperTitleInput) paperTitleInput.value = currentExpTitle;
+          if (paperKeywordsInput) paperKeywordsInput.value = localStorage.getItem('keywords') || "";
+          if (paperAuthorSpan) paperAuthorSpan.textContent = localStorage.getItem('userEmail') || "Author";
+      }
+      initializePaperPreview();
       
       // Handle logout
       document.getElementById('logoutBtn').addEventListener('click', function(e) {
@@ -380,11 +442,143 @@
       
       // Handle finish button
       document.getElementById('finishBtn').addEventListener('click', function() {
-        // Mark experiment as completed
+        localStorage.setItem('paperTitleFinal', paperTitleInput.value);
+        localStorage.setItem('paperKeywordsFinal', paperKeywordsInput.value);
+        // Potentially save the full generated paper text to localStorage if needed later, though it's large
+        // localStorage.setItem('fullGeneratedPaperText', document.querySelector('.paper-preview').innerText);
         localStorage.setItem('experimentCompleted', 'true');
-        // Navigate back to dashboard
         window.location.href = '../dashboard.html';
       });
+
+      generateFullPaperBtn.addEventListener('click', async function() {
+        generateFullPaperBtn.disabled = true;
+        generateFullPaperBtn.textContent = 'Generating Full Paper... Please Wait';
+
+        initializePaperPreview();
+        if(displayPaperAbstract) displayPaperAbstract.innerHTML = "<p><em>Generating Abstract...</em></p>";
+        if(displayIntroductionSection) displayIntroductionSection.innerHTML = "<h3>1. Introduction</h3><p><em>Generating...</em></p>";
+        if(displayMethodologySection) displayMethodologySection.innerHTML = "<h3>2. Methodology</h3><p><em>Generating...</em></p>";
+        if(displayResultsSection) displayResultsSection.innerHTML = "<h3>3. Results</h3><p><em>Generating...</em></p>";
+        if(displayDiscussionSection) displayDiscussionSection.innerHTML = "<h3>4. Discussion</h3><p><em>Generating...</em></p>";
+        if(displayConclusionSection) displayConclusionSection.innerHTML = "<h3>5. Conclusion</h3><p><em>Generating...</em></p>";
+        if(displayReferencesSection) displayReferencesSection.innerHTML = "<h3>References</h3><p><em>Generating...</em></p>"; // Corrected from h3 to References
+        if(displayAppendixSection) displayAppendixSection.innerHTML = "<h3>Appendix</h3><p><em>Generating...</em></p>"; // Corrected from h3 to Appendix
+
+
+        try {
+          const fullContext = {
+            experimentTitle: localStorage.getItem('experimentTitle') || "N/A",
+            researchQuestion: localStorage.getItem('researchQuestion') || "N/A",
+            researchDomain: localStorage.getItem('researchDomain') || "N/A",
+            keywords: localStorage.getItem('keywords') || "N/A",
+            hypothesisStatement: localStorage.getItem('hypothesisStatement') || "N/A",
+            experimentType: localStorage.getItem('experimentType') || "N/A",
+            independentVar: localStorage.getItem('independentVar') || "N/A",
+            dependentVar: localStorage.getItem('dependentVar') || "N/A",
+            controlVar1: localStorage.getItem('controlVar1') || "N/A",
+            controlVar2: localStorage.getItem('controlVar2') || "N/A",
+            sampleSize: localStorage.getItem('sampleSize') || "N/A",
+            procedure: localStorage.getItem('procedure') || "N/A",
+            materials: localStorage.getItem('materials') || "N/A",
+            dataCollection: localStorage.getItem('dataCollection') || "N/A",
+            actualGeneratedPythonCode: localStorage.getItem('actualGeneratedPythonCode') || "N/A",
+            experimentRunOutput: localStorage.getItem('experimentRunOutput') || "",
+            experimentRunError: localStorage.getItem('experimentRunError') || "",
+            selectedChartType: localStorage.getItem('selectedChartType') || "N/A",
+            selectedStatisticalTest: localStorage.getItem('selectedStatisticalTest') || "N/A",
+            aiDataInterpretation: localStorage.getItem('aiDataInterpretation') || "N/A",
+            conclusionSummary: localStorage.getItem('conclusionSummary') || "N/A",
+            evidenceSupport: localStorage.getItem('evidenceSupport') || "N/A",
+            limitations: localStorage.getItem('limitations') || "N/A",
+            futureDirections: localStorage.getItem('futureDirections') || "N/A",
+            conclusionStatus: localStorage.getItem('conclusionStatus') || "N/A",
+            aiPeerReviewData: JSON.parse(localStorage.getItem('aiPeerReviewData') || '{}'),
+            researcherResponseToReview: localStorage.getItem('researcherResponseToReview') || localStorage.getItem('reviewResponse') || "N/A", // Added fallback for reviewResponse
+          };
+
+          const contextString = `Comprehensive Project Data: ${JSON.stringify(fullContext, null, 2)}`;
+
+          async function fetchAiData(promptContent) {
+              const response = await fetch('http://localhost:5000/api/generate', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prompt: promptContent }),
+              });
+              if (!response.ok) {
+                  const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from API' }));
+                  throw new Error(`API Error (${response.status}): ${errorData.error || response.statusText}`);
+              }
+              const data = await response.json();
+              if (data.error) {
+                  throw new Error(`AI Error: ${data.error}`);
+              }
+              return data.text || '';
+          }
+
+          function setSectionContent(element, headerHtml, textContent) {
+              if (element) {
+                  element.innerHTML = headerHtml;
+                  const paragraphs = textContent.split('\n');
+                  paragraphs.forEach(pText => {
+                      if (pText.trim()) {
+                          const p = document.createElement('p');
+                          p.textContent = pText.trim(); // Trim each line
+                          element.appendChild(p);
+                      }
+                  });
+                  if (!element.querySelector('p') && !textContent.trim()) {
+                       const p = document.createElement('p');
+                       p.innerHTML = "<i>AI did not generate content for this section.</i>";
+                       element.appendChild(p);
+                  }
+                   // Special handling for abstract to ensure it's wrapped correctly
+                  if (element.id === 'displayPaperAbstract' && element.innerHTML !== headerHtml) { // if content was added
+                     element.innerHTML = `${headerHtml}<p>${element.querySelectorAll('p').length > 0 ? Array.from(element.querySelectorAll('p')).map(p => p.textContent).join('\n\n') : textContent}</p>`;
+                  }
+              }
+          }
+
+          if (displayPaperTitle) displayPaperTitle.textContent = fullContext.experimentTitle;
+
+          let prompt = `Write a concise academic abstract (approx. 200-250 words) for a research paper based on the following comprehensive project data. The abstract should cover: Background/Objective, Methods, Key Results, and Main Conclusion. Ensure it is formal and informative. Project Data: \n${contextString}`;
+          setSectionContent(displayPaperAbstract, "<strong>Abstract:</strong>", await fetchAiData(prompt));
+
+          prompt = `Write the Introduction section for this research paper. It should introduce the topic (${fullContext.researchDomain}), state the research problem/question ("${fullContext.researchQuestion}"), mention the significance, and clearly state the hypothesis ("${fullContext.hypothesisStatement}"). Project Data: \n${contextString}`;
+          setSectionContent(displayIntroductionSection, "<h3>1. Introduction</h3>", await fetchAiData(prompt));
+
+          prompt = `Describe the Methodology section for this paper. Detail the experiment type ("${fullContext.experimentType}"), variables (IV: "${fullContext.independentVar}", DV: "${fullContext.dependentVar}"), the experimental procedure ("${fullContext.procedure}"), materials, and data collection methods. If Python code was used, briefly mention its role. Project Data: \n${contextString}`;
+          setSectionContent(displayMethodologySection, "<h3>2. Methodology</h3>", await fetchAiData(prompt));
+
+          prompt = `Present the key Results of the study. Focus on the findings from the experiment/simulation ("${fullContext.experimentRunOutput || fullContext.experimentRunError}") and the AI's data interpretation ("${fullContext.aiDataInterpretation}"). Quantify results where possible. Project Data: \n${contextString}`;
+          setSectionContent(displayResultsSection, "<h3>3. Results</h3>", await fetchAiData(prompt));
+
+          prompt = `Write the Discussion section. Interpret the results ("${fullContext.aiDataInterpretation}") in light of the hypothesis ("${fullContext.hypothesisStatement}", Status: "${fullContext.conclusionStatus}"). Discuss implications, compare to any (even hypothetical) literature, and address study limitations ("${fullContext.limitations}"). Project Data: \n${contextString}`;
+          setSectionContent(displayDiscussionSection, "<h3>4. Discussion</h3>", await fetchAiData(prompt));
+
+          prompt = `Write the overall Conclusion section summarizing the main findings ("${fullContext.conclusionSummary}"), whether the hypothesis was supported, and key future directions ("${fullContext.futureDirections}"). Project Data: \n${contextString}`;
+          setSectionContent(displayConclusionSection, "<h3>5. Conclusion</h3>", await fetchAiData(prompt));
+
+          prompt = `Generate 2-3 mock academic references relevant to a study on domain "${fullContext.researchDomain}" with keywords "${fullContext.keywords}". Format them simply, each on a new line.`;
+          setSectionContent(displayReferencesSection, "<h3>References</h3>", await fetchAiData(prompt)); // Corrected from h3 to References
+
+          const peerReviewSummary = fullContext.aiPeerReviewData.strengths ? `Strengths: ${fullContext.aiPeerReviewData.strengths}. Weaknesses: ${fullContext.aiPeerReviewData.areasForImprovement}. Recommendations: ${fullContext.aiPeerReviewData.recommendations.join(', ')}.` : "No detailed peer review data found.";
+          prompt = `Create an Appendix section. Include a brief summary of the AI-generated peer review: ${peerReviewSummary}. Then summarize the researcher's response: "${fullContext.researcherResponseToReview}". Finally, include the core Python simulation code used, formatted nicely: \n\`\`\`python\n${fullContext.actualGeneratedPythonCode}\n\`\`\`\nProject Data: \n${contextString}`;
+          setSectionContent(displayAppendixSection, "<h3>Appendix</h3>", await fetchAiData(prompt)); // Corrected from h3 to Appendix
+
+          alert('Full academic paper draft has been generated from the live API and populated!');
+
+        } catch (error) {
+          console.error("Error generating full paper:", error);
+          alert(`There was an error generating the full paper: ${error.message}`);
+          // Reset some fields to show error
+          if(displayPaperAbstract) displayPaperAbstract.innerHTML = "<p><em>Error generating abstract.</em></p>";
+          if(displayIntroductionSection) displayIntroductionSection.innerHTML = "<h3>1. Introduction</h3><p><em>Error generating content.</em></p>";
+        } finally {
+          generateFullPaperBtn.disabled = false;
+          generateFullPaperBtn.textContent = 'Generate Full Paper with AI';
+        }
+      });
+
     });
   </script>
 </body>
